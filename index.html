@@ -1,0 +1,891 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCOSY | Student Complaint System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- ==================== AUTHENTICATION PAGES ==================== -->
+    
+    <!-- Login Page -->
+    <div class="auth-page" id="loginPage">
+        <div class="auth-bg"></div>
+        <div class="auth-overlay"></div>
+        <div class="auth-container">
+            <!-- Left Side: Branding -->
+            <div class="auth-brand">
+                <img src="Logo.jpg" alt="SCOSY Logo" class="logo-img">
+                 <h1>SCOSY</h1>
+                <div class="brand-subtitle">STUDENT COMPLAINT SYSTEM</div>
+                               <div class="plasu-info">
+                    <h4><i class="fas fa-info-circle"></i> About SCOSY</h4>
+                        <p>SCOSY is a secure complaint management system for Computer Science Department, Plateau State University, Bokkos. You can file complaints anonymously or track your academic concerns with military-grade encryption.</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i> File complaints securely with encryption</li>
+                        <li><i class="fas fa-check"></i> Submit anonymous reports for sensitive issues</li>
+                        <li><i class="fas fa-check"></i> Track complaint status in real-time</li>
+                        <li><i class="fas fa-check"></i> AI-powered auto-response assistance</li>
+                        <li><i class="fas fa-check"></i> End-to-end data backup & restore</li>
+                    </ul>
+                </div>
+                <div class="security-badges">
+                    <div class="badge-item"><i class="fas fa-lock"></i> AES-256 Encryption</div>
+                    <div class="badge-item"><i class="fas fa-fingerprint"></i> PBKDF2 Hashing</div>
+                    <div class="badge-item"><i class="fas fa-clock"></i> Auto Session Timeout</div>
+                    <div class="badge-item"><i class="fas fa-user-shield"></i> CSRF & XSS Protection</div>
+                    <div class="badge-item"><i class="fas fa-mask"></i> Anonymous Reporting</div>
+                </div>
+            </div>
+
+            <!-- Right Side: Login Form -->
+            <div class="auth-form-wrapper">
+                <div class="auth-box">
+                    <h2><i class="fas fa-right-to-bracket"></i> Secure Login</h2>
+                    <p class="box-subtitle">Enter your credentials to access the portal</p>
+                    
+                    <div class="lockout-banner" id="lockoutBanner">
+                        <i class="fas fa-ban"></i>
+                        <span>Account locked. Try again in <span id="lockoutTimer">15:00</span></span>
+                    </div>
+
+                    <form id="loginForm">
+                        <div class="input-group">
+                            <label>Matric Number / Email</label>
+                            <i class="fas fa-envelope field-icon"></i>
+                            <input type="text" id="loginEmail" placeholder="PLASU/2024/FNAS/0000 or email" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Password</label>
+                            <i class="fas fa-lock field-icon"></i>
+                            <input type="password" id="loginPassword" placeholder="Enter password" required>
+                        </div>
+                        <div class="form-options">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="rememberMe"> Remember device
+                            </label>
+                            <button type="button" class="link-btn" onclick="App.showForgot()">Forgot password?</button>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="loginBtn">
+                            <span id="loginText">Sign In Securely</span>
+                            <i class="fas fa-circle-notch fa-spin hidden" id="loginSpinner"></i>
+                        </button>
+                    </form>
+
+                    <div class="divider"><span>OR</span></div>
+                    
+                    <button class="btn btn-secondary" onclick="App.showAnonymous()">
+                        <i class="fas fa-user-secret"></i> Sign in to Anonymous Complaint Portal
+                    </button>
+                    
+                    <div class="form-footer">
+                        New student? <button class="link-btn" onclick="App.showRegister()">Create secure account</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Page -->
+    <div class="auth-page hidden" id="registerPage">
+        <div class="auth-bg"></div>
+        <div class="auth-overlay"></div>
+        <div class="auth-container">
+            <div class="auth-brand">
+                <img src="Logo.jpg" alt="SCOSY Logo" class="logo-img">
+                <div class="brand-subtitle">STUDENT COMPLAINT SYSTEM</div>
+                <h1>Join SCOSY</h1>
+                <p>Create your secure student account to file complaints, track status, and access academic resources.</p>
+                <div class="security-badges">
+                    <div class="badge-item"><i class="fas fa-shield-halved"></i> End-to-End Encryption</div>
+                    <div class="badge-item"><i class="fas fa-user-check"></i> Verified Student Accounts</div>
+                    <div class="badge-item"><i class="fas fa-bell"></i> Real-time Notifications</div>
+                </div>
+            </div>
+
+            <div class="auth-form-wrapper">
+                <div class="auth-box">
+                    <h2><i class="fas fa-user-plus"></i> Secure Registration</h2>
+                    <p class="box-subtitle">Create your encrypted student account</p>
+                    
+                    <form id="registerForm">
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label>Full Name <span class="required">*</span></label>
+                                <i class="fas fa-user field-icon"></i>
+                                <input type="text" id="regName" placeholder="Surname Firstname" required>
+                            </div>
+                            <div class="input-group">
+                                <label>Matric Number <span class="required">*</span></label>
+                                <i class="fas fa-id-card field-icon"></i>
+                                <input type="text" id="regMatric" placeholder="PLASU/2024/FNAS/0000" required pattern="PLASU/[0-9]{4}/FNAS/[0-9]{4}">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Email Address <span class="required">*</span></label>
+                            <i class="fas fa-envelope field-icon"></i>
+                            <input type="email" id="regEmail" placeholder="student@plasu.edu.ng" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label>Level <span class="required">*</span></label>
+                                <i class="fas fa-layer-group field-icon"></i>
+                                <select id="regLevel" required>
+                                    <option value="">Select Level</option>
+                                    <option value="100">100 Level</option>
+                                    <option value="200">200 Level</option>
+                                    <option value="300">300 Level</option>
+                                    <option value="400">400 Level</option>
+                                    <option value="500">500 Level (PGD)</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Password <span class="required">*</span></label>
+                                <i class="fas fa-lock field-icon"></i>
+                                <input type="password" id="regPassword" placeholder="Min 8 chars" required minlength="8">
+                                <div class="strength-bar" id="pwdStrength"><div class="strength-fill" id="pwdBar"></div></div>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Confirm Password <span class="required">*</span></label>
+                            <i class="fas fa-lock field-icon"></i>
+                            <input type="password" id="regConfirm" placeholder="Re-enter password" required>
+                            <div class="error-text" id="pwdError"><i class="fas fa-circle-exclamation"></i> Passwords do not match</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="regBtn">
+                            <span id="regText">Create Secure Account</span>
+                            <i class="fas fa-circle-notch fa-spin hidden" id="regSpinner"></i>
+                        </button>
+                    </form>
+                    
+                    <div class="form-footer">
+                        Already registered? <button class="link-btn" onclick="App.showLogin()">Sign in</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anonymous Complaint Page -->
+    <div class="auth-page hidden" id="anonymousPage">
+        <div class="auth-bg"></div>
+        <div class="auth-overlay"></div>
+        <div class="auth-container">
+            <div class="auth-brand">
+                <img src="Logo.jpg" alt="SCOSY Logo" class="logo-img">
+                <div class="brand-subtitle">ANONYMOUS REPORTING</div>
+                <h2>Anonymous Complaint System</h2>
+                <p>Report issues securely without revealing your identity. Zero metadata retention guaranteed.</p>
+                <div class="security-badges">
+                    <div class="badge-item"><i class="fas fa-mask"></i> Zero Identity Logging</div>
+                    <div class="badge-item"><i class="fas fa-bolt"></i> AI Auto-Response</div>
+                    <div class="badge-item"><i class="fas fa-ticket"></i> Anonymous Ticket ID</div>
+                    <div class="badge-item"><i class="fas fa-shield-halved"></i> End-to-End Encryption</div>
+                </div>
+            </div>
+
+            <div class="auth-form-wrapper">
+                <div class="auth-box" style="max-width: 540px;">
+                    <h2><i class="fas fa-paper-plane"></i> Submit Anonymous Report</h2>
+                    <p class="box-subtitle">Your identity is never recorded</p>
+                    
+                    <form id="anonForm">
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label>Category <span class="required">*</span></label>
+                                <i class="fas fa-tag field-icon"></i>
+                                <select id="anonCategory" required>
+                                    <option value="">Select Category</option>
+                                    <option value="academic">Academic Issues</option>
+                                    <option value="infrastructure">Infrastructure / Facilities</option>
+                                    <option value="harassment">Harassment / Discrimination</option>
+                                    <option value="administrative">Administrative</option>
+                                    <option value="security">Security Concern</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Urgency <span class="required">*</span></label>
+                                <i class="fas fa-flag field-icon"></i>
+                                <select id="anonUrgency" required>
+                                    <option value="low">Low</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="high">High</option>
+                                    <option value="critical">Critical</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Subject <span class="required">*</span></label>
+                            <i class="fas fa-heading field-icon"></i>
+                            <input type="text" id="anonSubject" placeholder="Brief summary" required maxlength="120">
+                        </div>
+                        <div class="input-group">
+                            <label>Detailed Description <span class="required">*</span></label>
+                            <textarea id="anonMessage" rows="5" placeholder="Describe the issue in detail..." required maxlength="2000"></textarea>
+                        </div>
+                        <div class="input-group">
+                            <label>Evidence (Optional)</label>
+                            <input type="file" id="anonFile" accept="image/*,.pdf,.doc,.docx">
+                            <small>Max 5MB. Files encrypted before storage.</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="anonBtn">
+                            <span id="anonText">Submit Anonymously</span>
+                            <i class="fas fa-circle-notch fa-spin hidden" id="anonSpinner"></i>
+                        </button>
+                    </form>
+                    
+                    <div class="divider"><span>OR</span></div>
+                    
+                    <button class="btn btn-secondary" onclick="App.showLogin()">
+                        <i class="fas fa-right-to-bracket"></i> Back to Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN DASHBOARD ==================== -->
+    <div class="dashboard hidden" id="dashboard">
+        
+        <!-- Top Navigation -->
+        <nav class="top-nav">
+            <div class="nav-brand">
+                <div class="logo-icon"><i class="fas fa-shield-halved"></i></div>
+                <div class="brand-text">
+                    <h3>SCOSY Portal</h3>
+                    <span>Student Complaint System</span>
+                </div>
+            </div>
+            <div class="nav-actions">
+                <div class="security-badge"><i class="fas fa-lock"></i> SECURE</div>
+                <div class="session-timer" id="sessionTimer">29:59</div>
+                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+                    <i class="fas fa-sun" id="themeIcon"></i>
+                </button>
+                <div class="user-menu"></div>
+                    <div class="user-avatar" id="userAvatar" onclick="App.toggleDropdown()">
+                        <span id="avatarInitial">S</span>
+                    </div>
+                    <div class="dropdown-menu" id="userDropdown">
+                        <div class="dropdown-header">
+                            <div class="dropdown-avatar" id="dropdownAvatar">S</div>
+                            <div class="dropdown-user-info">
+                                <span class="dropdown-name" id="dropdownName">Student Name</span>
+                                <span class="dropdown-matric" id="dropdownMatric">PLASU/2024/001</span>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        
+                        <a href="#" onclick="App.showSection('profile'); App.toggleDropdown(); return false;">
+                            <i class="fas fa-user"></i> Profile
+                        </a>
+                        <a href="#" onclick="App.showSection('security'); App.toggleDropdown(); return false;">
+                            <i class="fas fa-shield-halved"></i> Security Log
+                        </a>
+                        <a href="#" onclick="App.showSection('backup'); App.toggleDropdown(); return false;">
+                            <i class="fas fa-cloud-arrow-up"></i> Backup & Export
+                        </a>
+                        
+                        <div class="dropdown-divider"></div>
+                        
+                        <button class="logout-btn" onclick="App.logout()">
+                            <i class="fas fa-right-from-bracket"></i> Secure Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="dashboard-layout">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="menu-section">
+                    <div class="menu-title">Main Menu</div>
+                    <ul class="menu-list">
+                        <li><a href="#" class="active" onclick="App.showSection('dashboard', this)"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+                        <li><a href="#" onclick="App.showSection('complaint', this)"><i class="fas fa-circle-exclamation"></i> My Complaints <span class="menu-badge" id="myComplaintBadge">0</span></a></li>
+                        <li><a href="#" onclick="App.showSection('anonymous', this)"><i class="fas fa-user-secret"></i> Anonymous Portal</a></li>
+                        <li><a href="#" onclick="App.showSection('ai-assistant', this)"><i class="fas fa-robot"></i> SCOSY AI</a></li>
+                    </ul>
+                </div>
+                <div class="menu-section">
+                    <div class="menu-title">Academic</div>
+                    <ul class="menu-list">
+                        <li><a href="#" onclick="App.showSection('courses', this)"><i class="fas fa-book"></i> Courses & Materials</a></li>
+                        <li><a href="#" onclick="App.showSection('staff', this)"><i class="fas fa-chalkboard-user"></i> Staff Directory</a></li>
+                        <li><a href="#" onclick="App.showSection('calendar', this)"><i class="fas fa-calendar"></i> Academic Calendar</a></li>
+                    </ul>
+                </div>
+                <div class="menu-section">
+                    <div class="menu-title">System</div>
+                    <ul class="menu-list">
+                        <li><a href="#" onclick="App.showSection('backup', this)"><i class="fas fa-database"></i> Backup & Restore</a></li>
+                        <li><a href="#" onclick="App.showSection('security', this)"><i class="fas fa-shield-halved"></i> Security Audit</a></li>
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="content-area" id="mainContent">
+
+                <!-- DASHBOARD SECTION -->
+                <div class="content-section active" id="sec-dashboard">
+                    <div class="welcome-banner">
+                        <div class="welcome-text">
+                            <h2>Welcome back, <span id="welcomeName">Student</span>!</h2>
+                            <p>Session: <strong>2025/2026 First Semester</strong> | Department of Computer Science</p>
+                        </div>
+                        <div class="welcome-avatar" id="welcomeAvatar">S</div>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                            <div class="stat-info">
+                                <h4>Active Tickets</h4>
+                                <p id="statActive">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon blue"><i class="fas fa-clock"></i></div>
+                            <div class="stat-info">
+                                <h4>Pending Review</h4>
+                                <p id="statPending">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon amber"><i class="fas fa-user-secret"></i></div>
+                            <div class="stat-info">
+                                <h4>Anonymous Reports</h4>
+                                <p id="statAnon">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon red"><i class="fas fa-bolt"></i></div>
+                            <div class="stat-info">
+                                <h4>Critical Issues</h4>
+                                <p id="statCritical">0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <!-- Quick Actions -->
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                            </div>
+                            <div class="quick-actions">
+                                <button class="action-btn" onclick="App.showSection('complaint')">
+                                    <i class="fas fa-plus-circle"></i> File a Student Complaint
+                                </button>
+                                <button class="action-btn" onclick="App.showAnonymous()">
+                                    <i class="fas fa-user-secret"></i> Submit Anonymous Report
+                                </button>
+                                <button class="action-btn" onclick="App.showSection('ai-assistant')">
+                                    <i class="fas fa-robot"></i> Ask SCOSY AI Assistant
+                                </button>
+                                <button class="action-btn" onclick="App.showSection('backup')">
+                                    <i class="fas fa-cloud-arrow-up"></i> Backup My Data
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity -->
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3><i class="fas fa-bell"></i> Recent Activity</h3>
+                            </div>
+                            <div class="activity-list" id="activityLog">
+                                <div class="activity-item">
+                                    <div class="activity-icon purple"><i class="fas fa-sign-in-alt"></i></div>
+                                    <div class="activity-details">
+                                        <h4>Portal Access</h4>
+                                        <p>Successfully logged into SCOSY</p>
+                                    </div>
+                                    <span class="activity-time">Just now</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COMPLAINTS SECTION -->
+                <div class="content-section" id="sec-complaint">
+                    <div class="page-header">
+                        <h1><i class="fas fa-circle-exclamation"></i> Student Complaint System</h1>
+                        <button class="btn btn-primary btn-sm" onclick="App.openComplaintModal()">
+                            <i class="fas fa-plus"></i> New Complaint
+                        </button>
+                    </div>
+                    <div class="dashboard-grid">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3><i class="fas fa-list"></i> My Tickets</h3>
+                            </div>
+                            <div class="ticket-list" id="studentTicketList">
+                                <p class="empty-state">No complaints filed yet</p>
+                            </div>
+                        </div>
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3><i class="fas fa-chart-bar"></i> Ticket Analytics</h3>
+                            </div>
+                            <div class="analytics-list">
+                                <div class="analytics-row">
+                                    <span>Total Submitted</span>
+                                    <strong id="analyticsTotal">0</strong>
+                                </div>
+                                <div class="analytics-row">
+                                    <span>Resolved</span>
+                                    <strong class="text-success" id="analyticsResolved">0</strong>
+                                </div>
+                                <div class="analytics-row">
+                                    <span>Average Resolution</span>
+                                    <strong id="analyticsAvg">--</strong>
+                                </div>
+                                <div class="analytics-row">
+                                    <span>Resolution Rate</span>
+                                    <strong class="text-info" id="analyticsRate">0%</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ANONYMOUS SECTION -->
+                <div class="content-section" id="sec-anonymous">
+                    <div class="page-header">
+                        <h1><i class="fas fa-user-secret"></i> Anonymous Reports</h1>
+                        <button class="btn btn-primary btn-sm" onclick="App.showAnonymous()">
+                            <i class="fas fa-plus"></i> New Anonymous Report
+                        </button>
+                    </div>
+                    <div class="info-banner">
+                        <h3><i class="fas fa-shield-halved"></i> Zero Identity Protection</h3>
+                        <p>Anonymous complaints are stored in an isolated encrypted namespace with no linkage to authenticated sessions, IP metadata, or browser fingerprints.</p>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-mask"></i> Submitted Anonymous Tickets</h3>
+                        </div>
+                        <p class="panel-desc">These tickets are stored with zero identifying information. Use your ticket ID to check status.</p>
+                        <div class="ticket-list" id="anonymousTicketList">
+                            <p class="empty-state">No anonymous reports in this session</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI ASSISTANT SECTION -->
+                <div class="content-section" id="sec-ai-assistant">
+                    <div class="page-header">
+                        <h1><i class="fas fa-robot"></i> SCOSY AI Assistant</h1>
+                        <div class="header-actions">
+                            <button class="btn btn-sm btn-secondary" onclick="App.loadAdvancedAI()" id="loadAiBtn">
+                                <i class="fas fa-brain"></i> Load Advanced AI
+                            </button>
+                            <button class="btn btn-sm btn-secondary" onclick="App.clearChat()">
+                                <i class="fas fa-trash"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chat-container">
+                        <div class="chat-header">
+                            <div class="bot-avatar"><i class="fas fa-robot"></i></div>
+                            <div class="bot-info">
+                                <h3>SCOSY AI Assistant</h3>
+                                <p>Rule-based NLP + Optional Neural Engine</p>
+                            </div>
+                            <div class="status-indicator"><div class="status-dot"></div> Online</div>
+                        </div>
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="message bot-message">
+                                <div class="message-bubble">
+                                    Hello! I'm the SCOSY AI Assistant. I can help you with:<br><br>
+                                    &bull; <strong>Academic</strong> - Courses, materials, registration, calendar<br>
+                                    &bull; <strong>Complaints</strong> - How to file, track status, escalate<br>
+                                    &bull; <strong>Department</strong> - Staff, labs, facilities, contacts<br>
+                                    &bull; <strong>Security</strong> - Password resets, account issues<br><br>
+                                    Type your question below or use a quick reply.
+                                </div>
+                                <div class="message-meta">SCOSY AI &bull; Just now</div>
+                            </div>
+                        </div>
+                        <div class="typing-indicator" id="typingIndicator"><span></span><span></span><span></span></div>
+                        <div class="quick-replies">
+                            <button class="quick-reply" onclick="App.sendQuick('How do I file a complaint?')">File Complaint</button>
+                            <button class="quick-reply" onclick="App.sendQuick('What courses are offered in CS?')">CS Courses</button>
+                            <button class="quick-reply" onclick="App.sendQuick('Tell me about the CS staff')">Staff</button>
+                            <button class="quick-reply" onclick="App.sendQuick('How does anonymous reporting work?')">Anonymous</button>
+                            <button class="quick-reply" onclick="App.sendQuick('Academic calendar 2025/2026')">Calendar</button>
+                            <button class="quick-reply" onclick="App.sendQuick('How do I backup my data?')">Backup</button>
+                        </div>
+                        <div class="chat-input-area">
+                            <input type="text" class="chat-input" id="chatInput" placeholder="Ask about CS department, complaints, or academics..." onkeypress="if(event.key==='Enter')App.sendChat()">
+                            <button class="chat-send" onclick="App.sendChat()"><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COURSES SECTION -->
+                <div class="content-section" id="sec-courses">
+                    <div class="page-header">
+                        <h1><i class="fas fa-book"></i> CS Courses & Materials</h1>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-graduation-cap"></i> Department of Computer Science</h3>
+                        </div>
+                        <p class="panel-desc">The Department of Computer Science offers programs leading to B.Sc. Computer Science, M.Sc., and Ph.D. degrees. Our curriculum covers software engineering, artificial intelligence, cybersecurity, data science, and computer networks.</p>
+                        <div class="courses-grid">
+                            <div class="course-card">
+                                <h4><i class="fas fa-laptop-code"></i> 100 Level</h4>
+                                <ul>
+                                    <li>COS 101: Introduction to Computing</li>
+                                    <li>COS 102: Programming in C</li>
+                                    <li>MAT 101: Algebra & Trigonometry</li>
+                                    <li>PHY 101: General Physics I</li>
+                                    <li>GST 101: Use of English</li>
+                                </ul>
+                            </div>
+                            <div class="course-card">
+                                <h4><i class="fas fa-code"></i> 200 Level</h4>
+                                <ul>
+                                    <li>COS 201: Data Structures & Algorithms</li>
+                                    <li>COS 202: Object-Oriented Programming (Java)</li>
+                                    <li>COS 203: Computer Organization</li>
+                                    <li>MAT 201: Discrete Mathematics</li>
+                                    <li>STA 201: Probability & Statistics</li>
+                                </ul>
+                            </div>
+                            <div class="course-card">
+                                <h4><i class="fas fa-network-wired"></i> 300 Level</h4>
+                                <ul>
+                                    <li>COS 301: Operating Systems</li>
+                                    <li>COS 302: Database Management Systems</li>
+                                    <li>COS 303: Computer Networks</li>
+                                    <li>COS 304: Software Engineering</li>
+                                    <li>COS 305: Web Technologies</li>
+                                </ul>
+                            </div>
+                            <div class="course-card">
+                                <h4><i class="fas fa-brain"></i> 400 Level</h4>
+                                <ul>
+                                    <li>COS 401: Artificial Intelligence</li>
+                                    <li>COS 402: Machine Learning</li>
+                                    <li>COS 403: Cybersecurity</li>
+                                    <li>COS 404: Cloud Computing</li>
+                                    <li>COS 499: Final Year Project</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STAFF SECTION -->
+                <div class="content-section" id="sec-staff">
+                    <div class="page-header">
+                        <h1><i class="fas fa-chalkboard-user"></i> CS Staff Directory</h1>
+                    </div>
+                    <div class="staff-grid">
+                        <div class="staff-card">
+                            <div class="staff-avatar" style="background: linear-gradient(135deg, #4f46e5, #7c3aed);">HD</div>
+                            <h4>Prof. H. D. Ibrahim</h4>
+                            <div class="staff-role">Head of Department</div>
+                            <p>Ph.D Computer Science<br>Software Engineering & AI</p>
+                        </div>
+                        <div class="staff-card">
+                            <div class="staff-avatar" style="background: linear-gradient(135deg, #3b82f6, #1e40af);">JA</div>
+                            <h4>Dr. J. A. Adeyemo</h4>
+                            <div class="staff-role">Senior Lecturer</div>
+                            <p>Ph.D Computer Science<br>Computer Networks & Security</p>
+                        </div>
+                        <div class="staff-card">
+                            <div class="staff-avatar" style="background: linear-gradient(135deg, #8b5cf6, #a16207);">MO</div>
+                            <h4>Dr. M. O. Olayiwola</h4>
+                            <div class="staff-role">Lecturer I</div>
+                            <p>Ph.D Data Science<br>Machine Learning & Big Data</p>
+                        </div>
+                        <div class="staff-card">
+                            <div class="staff-avatar" style="background: linear-gradient(135deg, #10b981, #047857);">SA</div>
+                            <h4>Mrs. S. A. Abdullahi</h4>
+                            <div class="staff-role">Lecturer II</div>
+                            <p>M.Sc. Computer Science<br>Database Systems & Web Tech</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CALENDAR SECTION -->
+                <div class="content-section" id="sec-calendar">
+                    <div class="page-header">
+                        <h1><i class="fas fa-calendar"></i> Academic Calendar</h1>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-clock"></i> 2025/2026 Session - First Semester</h3>
+                        </div>
+                        <div class="calendar-list">
+                            <div class="calendar-item">
+                                <div class="calendar-date">
+                                    <div class="date-day">29</div>
+                                    <div class="date-month">SEP</div>
+                                </div>
+                                <div class="calendar-details">
+                                    <div class="event-title">Fresh Students Registration Begins</div>
+                                    <div class="event-desc">2025/2026 Academic Session opens</div>
+                                </div>
+                            </div>
+                            <div class="calendar-item">
+                                <div class="calendar-date">
+                                    <div class="date-day">13</div>
+                                    <div class="date-month">OCT</div>
+                                </div>
+                                <div class="calendar-details">
+                                    <div class="event-title">Lectures Commence</div>
+                                    <div class="event-desc">All levels - Normal registration ends</div>
+                                </div>
+                            </div>
+                            <div class="calendar-item">
+                                <div class="calendar-date">
+                                    <div class="date-day">07</div>
+                                    <div class="date-month">NOV</div>
+                                </div>
+                                <div class="calendar-details">
+                                    <div class="event-title">Matriculation Ceremony</div>
+                                    <div class="event-desc">Fresh students official induction</div>
+                                </div>
+                            </div>
+                            <div class="calendar-item">
+                                <div class="calendar-date">
+                                    <div class="date-day">19</div>
+                                    <div class="date-month">JAN</div>
+                                </div>
+                                <div class="calendar-details">
+                                    <div class="event-title">First Semester Examinations</div>
+                                    <div class="event-desc">Jan 19 - Feb 4, 2026</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BACKUP SECTION -->
+                <div class="content-section" id="sec-backup">
+                    <div class="page-header">
+                        <h1><i class="fas fa-cloud-arrow-up"></i> Backup & Restore</h1>
+                    </div>
+                    <div class="dashboard-grid">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3><i class="fas fa-download"></i> Export Data</h3>
+                            </div>
+                            <p class="panel-desc">Export all your data as an AES-256 encrypted JSON file. Upload to any cloud service.</p>
+                            <div class="input-group">
+                                <label>Encryption Password <span class="required">*</span></label>
+                                <input type="password" id="backupPassword" placeholder="Min 8 characters" minlength="8">
+                                <small>This password will be required to restore your backup.</small>
+                            </div>
+                            <button class="btn btn-primary" onclick="App.exportBackup()">
+                                <i class="fas fa-file-export"></i> Generate Encrypted Backup
+                            </button>
+                            <div class="console-log" id="backupLog">
+                                <div><span class="log-time">[SYSTEM]</span><span class="log-info">Backup system ready. Awaiting command.</span></div>
+                            </div>
+                        </div>
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3><i class="fas fa-upload"></i> Restore Data</h3>
+                            </div>
+                            <p class="panel-desc">Restore from a previously exported encrypted backup file.</p>
+                            <div class="input-group">
+                                <label>Select Backup File</label>
+                                <input type="file" id="restoreFile" accept=".json,.enc">
+                            </div>
+                            <div class="input-group">
+                                <label>Decryption Password</label>
+                                <input type="password" id="restorePassword" placeholder="Enter backup password">
+                            </div>
+                            <button class="btn btn-secondary" onclick="App.importBackup()">
+                                <i class="fas fa-file-import"></i> Restore from Backup
+                            </button>
+                        </div>
+                    </div>
+                    <div class="panel" style="margin-top: 24px;">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-cloud"></i> Cloud Backup Instructions</h3>
+                        </div>
+                        <div class="cloud-grid">
+                            <div class="cloud-card">
+                                <h4><i class="fab fa-google-drive"></i> Google Drive</h4>
+                                <p>1. Export encrypted backup<br>2. Go to drive.google.com<br>3. Upload .json file<br>4. Store password separately</p>
+                            </div>
+                            <div class="cloud-card">
+                                <h4><i class="fas fa-box"></i> Terabox</h4>
+                                <p>1. Export encrypted backup<br>2. Login to terabox.com<br>3. Upload to secure folder<br>4. Enable 2FA on account</p>
+                            </div>
+                            <div class="cloud-card">
+                                <h4><i class="fas fa-hard-drive"></i> Local Storage</h4>
+                                <p>1. Export encrypted backup<br>2. Save to USB drive<br>3. Keep in secure location<br>4. Update monthly</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECURITY SECTION -->
+                <div class="content-section" id="sec-security">
+                    <div class="page-header">
+                        <h1><i class="fas fa-shield-halved"></i> Security Audit Log</h1>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-list-check"></i> Active Security Measures</h3>
+                        </div>
+                        <div class="security-list">
+                            <div class="security-item">
+                                <h4><i class="fas fa-key"></i> PBKDF2 Password Hashing <span class="status-tag">Active</span></h4>
+                                <p>All passwords are hashed using PBKDF2 with SHA-256, 100,000 iterations, and unique 128-bit random salts.</p>
+                            </div>
+                            <div class="security-item">
+                                <h4><i class="fas fa-lock"></i> AES-256-GCM Data Encryption <span class="status-tag">Active</span></h4>
+                                <p>All local storage data is encrypted using AES-256-GCM with keys derived from your session.</p>
+                            </div>
+                            <div class="security-item">
+                                <h4><i class="fas fa-clock"></i> Session Timeout & Rotation <span class="status-tag">Active</span></h4>
+                                <p>Sessions automatically expire after 30 minutes of inactivity. Tokens are cryptographically random 256-bit values.</p>
+                            </div>
+                            <div class="security-item">
+                                <h4><i class="fas fa-ban"></i> Rate Limiting & Lockout <span class="status-tag">Active</span></h4>
+                                <p>Accounts are locked for 15 minutes after 5 failed login attempts.</p>
+                            </div>
+                            <div class="security-item">
+                                <h4><i class="fas fa-shield-virus"></i> CSRF Token Protection <span class="status-tag">Active</span></h4>
+                                <p>All state-changing forms include cryptographically random CSRF tokens validated on submission.</p>
+                            </div>
+                            <div class="security-item">
+                                <h4><i class="fas fa-code"></i> XSS Prevention <span class="status-tag">Active</span></h4>
+                                <p>All user inputs are sanitized using HTML entity encoding and CSP headers block inline scripts.</p>
+                            </div>
+                            <div class="security-item">
+                                <h4><i class="fas fa-fingerprint"></i> Anonymous Isolation <span class="status-tag">Active</span></h4>
+                                <p>Anonymous complaints are stored in a separate encrypted namespace with no linkage to sessions.</p>
+                            </div>
+                            <div class="security-item">
+                                <h4><i class="fas fa-file-shield"></i> Encrypted Backup Integrity <span class="status-tag">Active</span></h4>
+                                <p>Backups use AES-256-GCM with authenticated encryption. Tampered files are detected and rejected.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-terminal"></i> Security Event Log</h3>
+                        </div>
+                        <div class="console-log" id="securityLog" style="max-height: 320px;">
+                            <div><span class="log-time">[INIT]</span><span class="log-info">Security subsystem initialized</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PROFILE SECTION -->
+                <div class="content-section" id="sec-profile">
+                    <div class="page-header">
+                        <h1><i class="fas fa-user"></i> My Profile</h1>
+                    </div>
+                    <div class="dashboard-grid">
+                        <div class="panel" style="text-align: center;">
+                            <div class="profile-avatar-big" id="profileAvatarBig">S</div>
+                            <h2 id="profileName" style="margin-bottom: 6px; font-size: 1.5rem;">Student Name</h2>
+                            <p id="profileMatric" style="color: var(--text-muted); font-family: monospace; font-size: 1rem;">PLASU/2024/001</p>
+                        </div>
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3><i class="fas fa-id-card"></i> Details</h3>
+                            </div>
+                            <div class="profile-details">
+                                <div class="detail-row">
+                                    <span>Email</span>
+                                    <strong id="profileEmail">--</strong>
+                                </div>
+                                <div class="detail-row">
+                                    <span>Department</span>
+                                    <strong>Computer Science</strong>
+                                </div>
+                                <div class="detail-row">
+                                    <span>Level</span>
+                                    <strong id="profileLevel">--</strong>
+                                </div>
+                                <div class="detail-row">
+                                    <span>Account Created</span>
+                                    <strong id="profileCreated">--</strong>
+                                </div>
+                                <div class="detail-row">
+                                    <span>Last Login</span>
+                                    <strong id="profileLastLogin">--</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
+    <div class="modal" id="complaintModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="App.closeComplaintModal()"><i class="fas fa-times"></i></button>
+            <h2><i class="fas fa-plus-circle"></i> New Complaint</h2>
+            <p class="modal-desc">Your complaint will be encrypted and assigned a tracking ID.</p>
+            <form id="complaintForm">
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Category <span class="required">*</span></label>
+                        <select id="compCategory" required>
+                            <option value="">Select</option>
+                            <option value="academic">Academic Issue</option>
+                            <option value="infrastructure">Infrastructure</option>
+                            <option value="staff">Staff Conduct</option>
+                            <option value="administrative">Administrative</option>
+                            <option value="security">Security</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Priority <span class="required">*</span></label>
+                        <select id="compPriority" required>
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Subject <span class="required">*</span></label>
+                    <input type="text" id="compSubject" required maxlength="120" placeholder="Brief summary">
+                </div>
+                <div class="input-group">
+                    <label>Description <span class="required">*</span></label>
+                    <textarea id="compMessage" rows="4" required maxlength="2000" placeholder="Detailed description..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> Submit Complaint
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="theme-controller.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>'''
