@@ -8,163 +8,173 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        // Initialize theme immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('scosy_theme_preference');
+            const systemPreference = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            const theme = savedTheme || systemPreference;
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
 </head>
 <body>
 
     <!-- ==================== AUTHENTICATION PAGES ==================== -->
     
-    <!-- Login Page -->
-    <div class="auth-page" id="loginPage">
+    <!-- Login/Register Page -->
+    <div class="auth-page" id="authPage">
         <div class="auth-bg"></div>
         <div class="auth-overlay"></div>
         <div class="auth-container">
-            <!-- Left Side: Branding -->
-            <div class="auth-brand">
-                <img src="Logo.jpg" alt="SCOSY Logo" class="logo-img">
-                 <h1>SCOSY</h1>
-                <div class="brand-subtitle">STUDENT COMPLAINT SYSTEM</div>
-                               <div class="plasu-info">
-                    <h4><i class="fas fa-info-circle"></i> About SCOSY</h4>
-                        <p>SCOSY is a secure complaint management system for Computer Science Department, Plateau State University, Bokkos. You can file complaints anonymously or track your academic concerns with military-grade encryption.</p>
-                    <ul>
-                        <li><i class="fas fa-check"></i> File complaints securely with encryption</li>
-                        <li><i class="fas fa-check"></i> Submit anonymous reports for sensitive issues</li>
-                        <li><i class="fas fa-check"></i> Track complaint status in real-time</li>
-                        <li><i class="fas fa-check"></i> AI-powered auto-response assistance</li>
-                        <li><i class="fas fa-check"></i> End-to-end data backup & restore</li>
-                    </ul>
-                </div>
-                <div class="security-badges">
-                    <div class="badge-item"><i class="fas fa-lock"></i> AES-256 Encryption</div>
-                    <div class="badge-item"><i class="fas fa-fingerprint"></i> PBKDF2 Hashing</div>
-                    <div class="badge-item"><i class="fas fa-clock"></i> Auto Session Timeout</div>
-                    <div class="badge-item"><i class="fas fa-user-shield"></i> CSRF & XSS Protection</div>
-                    <div class="badge-item"><i class="fas fa-mask"></i> Anonymous Reporting</div>
-                </div>
-            </div>
+            <div class="auth-slider" id="authSlider">
+                <!-- Login Slide -->
+                <div class="auth-slide" id="loginSlide">
+                    <div class="auth-form-wrapper">
+                        <div class="auth-box">
+                            <h2><i class="fas fa-right-to-bracket"></i> Secure Login</h2>
+                            <p class="box-subtitle">Enter your credentials to access the portal</p>
+                            
+                            <div class="lockout-banner" id="lockoutBanner">
+                                <i class="fas fa-ban"></i>
+                                <span>Account locked. Try again in <span id="lockoutTimer">15:00</span></span>
+                            </div>
 
-            <!-- Right Side: Login Form -->
-            <div class="auth-form-wrapper">
-                <div class="auth-box">
-                    <h2><i class="fas fa-right-to-bracket"></i> Secure Login</h2>
-                    <p class="box-subtitle">Enter your credentials to access the portal</p>
-                    
-                    <div class="lockout-banner" id="lockoutBanner">
-                        <i class="fas fa-ban"></i>
-                        <span>Account locked. Try again in <span id="lockoutTimer">15:00</span></span>
+                            <form id="loginForm">
+                                <div class="input-group">
+                                    <label>Staff ID / Matric Number / Email</label>
+                                    <i class="fas fa-envelope field-icon"></i>
+                                    <input type="text" id="loginEmail" placeholder="admin or PLASU/2024/FNAS/0000 or email" required>
+                                </div>
+                                <div class="input-group">
+                                    <label>Password</label>
+                                    <i class="fas fa-lock field-icon"></i>
+                                    <input type="password" id="loginPassword" placeholder="Enter password" required>
+                                </div>
+                                <div class="form-options">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="rememberMe"> Remember device
+                                    </label>
+                                    <button type="button" class="link-btn" onclick="App.showForgot()">Forgot password?</button>
+                                </div>
+                                <button type="submit" class="btn btn-primary" id="loginBtn">
+                                    <span id="loginText">Sign In Securely</span>
+                                    <i class="fas fa-circle-notch fa-spin hidden" id="loginSpinner"></i>
+                                </button>
+                            </form>
+
+                            <div class="divider"><span>OR</span></div>
+                            
+                            <button class="btn btn-secondary" onclick="App.showAnonymous()">
+                                <i class="fas fa-user-secret"></i> Anonymous Complaint Portal
+                            </button>
+                            
+                            <div class="form-footer">
+                                New user? <button class="link-btn" onclick="App.slideToRegister()">Create secure account</button>
+                            </div>
+                        </div>
                     </div>
-
-                    <form id="loginForm">
-                        <div class="input-group">
-                            <label>Matric Number / Email</label>
-                            <i class="fas fa-envelope field-icon"></i>
-                            <input type="text" id="loginEmail" placeholder="PLASU/2024/FNAS/0000 or email" required>
+                    <div class="auth-brand">
+                        <div class="logo-placeholder">
+                            <i class="fas fa-shield-halved"></i>
                         </div>
-                        <div class="input-group">
-                            <label>Password</label>
-                            <i class="fas fa-lock field-icon"></i>
-                            <input type="password" id="loginPassword" placeholder="Enter password" required>
+                        <h1>SCOSY</h1>
+                        <div class="brand-subtitle">STUDENT COMPLAINT SYSTEM</div>
+                        <div class="plasu-info">
+                            <h4><i class="fas fa-info-circle"></i> About SCOSY</h4>
+                            <p>SCOSY is a secure complaint management system for Computer Science Department, Plateau State University, Bokkos. You can file complaints anonymously or track your academic concerns with military-grade encryption.</p>
+                            <ul>
+                                <li><i class="fas fa-check"></i> File complaints securely with encryption</li>
+                                <li><i class="fas fa-check"></i> Submit anonymous reports for sensitive issues</li>
+                                <li><i class="fas fa-check"></i> Track complaint status in real-time</li>
+                                <li><i class="fas fa-check"></i> AI-powered auto-response assistance</li>
+                                <li><i class="fas fa-check"></i> End-to-end data backup & restore</li>
+                            </ul>
                         </div>
-                        <div class="form-options">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="rememberMe"> Remember device
-                            </label>
-                            <button type="button" class="link-btn" onclick="App.showForgot()">Forgot password?</button>
+                        <div class="security-badges">
+                            <div class="badge-item"><i class="fas fa-lock"></i> AES-256 Encryption</div>
+                            <div class="badge-item"><i class="fas fa-fingerprint"></i> PBKDF2 Hashing</div>
+                            <div class="badge-item"><i class="fas fa-clock"></i> Auto Session Timeout</div>
+                            <div class="badge-item"><i class="fas fa-user-shield"></i> CSRF & XSS Protection</div>
+                            <div class="badge-item"><i class="fas fa-mask"></i> Anonymous Reporting</div>
                         </div>
-                        <button type="submit" class="btn btn-primary" id="loginBtn">
-                            <span id="loginText">Sign In Securely</span>
-                            <i class="fas fa-circle-notch fa-spin hidden" id="loginSpinner"></i>
-                        </button>
-                    </form>
-
-                    <div class="divider"><span>OR</span></div>
-                    
-                    <button class="btn btn-secondary" onclick="App.showAnonymous()">
-                        <i class="fas fa-user-secret"></i> Sign in to Anonymous Complaint Portal
-                    </button>
-                    
-                    <div class="form-footer">
-                        New student? <button class="link-btn" onclick="App.showRegister()">Create secure account</button>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Registration Page -->
-    <div class="auth-page hidden" id="registerPage">
-        <div class="auth-bg"></div>
-        <div class="auth-overlay"></div>
-        <div class="auth-container">
-            <div class="auth-brand">
-                <img src="Logo.jpg" alt="SCOSY Logo" class="logo-img">
-                <div class="brand-subtitle">STUDENT COMPLAINT SYSTEM</div>
-                <h1>Join SCOSY</h1>
-                <p>Create your secure student account to file complaints, track status, and access academic resources.</p>
-                <div class="security-badges">
-                    <div class="badge-item"><i class="fas fa-shield-halved"></i> End-to-End Encryption</div>
-                    <div class="badge-item"><i class="fas fa-user-check"></i> Verified Student Accounts</div>
-                    <div class="badge-item"><i class="fas fa-bell"></i> Real-time Notifications</div>
-                </div>
-            </div>
-
-            <div class="auth-form-wrapper">
-                <div class="auth-box">
-                    <h2><i class="fas fa-user-plus"></i> Secure Registration</h2>
-                    <p class="box-subtitle">Create your encrypted student account</p>
-                    
-                    <form id="registerForm">
-                        <div class="form-row">
-                            <div class="input-group">
-                                <label>Full Name <span class="required">*</span></label>
-                                <i class="fas fa-user field-icon"></i>
-                                <input type="text" id="regName" placeholder="Surname Firstname" required>
-                            </div>
-                            <div class="input-group">
-                                <label>Matric Number <span class="required">*</span></label>
-                                <i class="fas fa-id-card field-icon"></i>
-                                <input type="text" id="regMatric" placeholder="PLASU/2024/FNAS/0000" required pattern="PLASU/[0-9]{4}/FNAS/[0-9]{4}">
+                <!-- Register Slide -->
+                <div class="auth-slide" id="registerSlide">
+                    <div class="auth-brand">
+                        <div class="logo-placeholder">
+                            <i class="fas fa-shield-halved"></i>
+                        </div>
+                        <h1>Join SCOSY</h1>
+                        <div class="brand-subtitle">STUDENT COMPLAINT SYSTEM</div>
+                        <p>Create your secure student account to file complaints, track status, and access academic resources.</p>
+                        <div class="security-badges">
+                            <div class="badge-item"><i class="fas fa-shield-halved"></i> End-to-End Encryption</div>
+                            <div class="badge-item"><i class="fas fa-user-check"></i> Verified Student Accounts</div>
+                            <div class="badge-item"><i class="fas fa-bell"></i> Real-time Notifications</div>
+                        </div>
+                    </div>
+                    <div class="auth-form-wrapper">
+                        <div class="auth-box">
+                            <h2><i class="fas fa-user-plus"></i> Secure Registration</h2>
+                            <p class="box-subtitle">Create your encrypted student account</p>
+                            
+                            <form id="registerForm">
+                                <div class="form-row">
+                                    <div class="input-group">
+                                        <label>Full Name <span class="required">*</span></label>
+                                        <i class="fas fa-user field-icon"></i>
+                                        <input type="text" id="regName" placeholder="Surname Firstname" required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label>Matric Number <span class="required">*</span></label>
+                                        <i class="fas fa-id-card field-icon"></i>
+                                        <input type="text" id="regMatric" placeholder="PLASU/2024/FNAS/0000" required pattern="PLASU/[0-9]{4}/FNAS/[0-9]{4}">
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label>Email Address <span class="required">*</span></label>
+                                    <i class="fas fa-envelope field-icon"></i>
+                                    <input type="email" id="regEmail" placeholder="student@plasu.edu.ng" required>
+                                </div>
+                                <div class="form-row">
+                                    <div class="input-group">
+                                        <label>Level <span class="required">*</span></label>
+                                        <i class="fas fa-layer-group field-icon"></i>
+                                        <select id="regLevel" required>
+                                            <option value="">Select Level</option>
+                                            <option value="100">100 Level</option>
+                                            <option value="200">200 Level</option>
+                                            <option value="300">300 Level</option>
+                                            <option value="400">400 Level</option>
+                                            <option value="500">500 Level (PGD)</option>
+                                        </select>
+                                    </div>
+                                    <div class="input-group">
+                                        <label>Password <span class="required">*</span></label>
+                                        <i class="fas fa-lock field-icon"></i>
+                                        <input type="password" id="regPassword" placeholder="Min 8 chars" required minlength="8">
+                                        <div class="strength-bar" id="pwdStrength"><div class="strength-fill" id="pwdBar"></div></div>
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label>Confirm Password <span class="required">*</span></label>
+                                    <i class="fas fa-lock field-icon"></i>
+                                    <input type="password" id="regConfirm" placeholder="Re-enter password" required>
+                                    <div class="error-text" id="pwdError"><i class="fas fa-circle-exclamation"></i> Passwords do not match</div>
+                                </div>
+                                <button type="submit" class="btn btn-primary" id="regBtn">
+                                    <span id="regText">Create Secure Account</span>
+                                    <i class="fas fa-circle-notch fa-spin hidden" id="regSpinner"></i>
+                                </button>
+                            </form>
+                            
+                            <div class="form-footer">
+                                Already registered? <button class="link-btn" onclick="App.slideToLogin()">Sign in</button>
                             </div>
                         </div>
-                        <div class="input-group">
-                            <label>Email Address <span class="required">*</span></label>
-                            <i class="fas fa-envelope field-icon"></i>
-                            <input type="email" id="regEmail" placeholder="student@plasu.edu.ng" required>
-                        </div>
-                        <div class="form-row">
-                            <div class="input-group">
-                                <label>Level <span class="required">*</span></label>
-                                <i class="fas fa-layer-group field-icon"></i>
-                                <select id="regLevel" required>
-                                    <option value="">Select Level</option>
-                                    <option value="100">100 Level</option>
-                                    <option value="200">200 Level</option>
-                                    <option value="300">300 Level</option>
-                                    <option value="400">400 Level</option>
-                                    <option value="500">500 Level (PGD)</option>
-                                </select>
-                            </div>
-                            <div class="input-group">
-                                <label>Password <span class="required">*</span></label>
-                                <i class="fas fa-lock field-icon"></i>
-                                <input type="password" id="regPassword" placeholder="Min 8 chars" required minlength="8">
-                                <div class="strength-bar" id="pwdStrength"><div class="strength-fill" id="pwdBar"></div></div>
-                            </div>
-                        </div>
-                        <div class="input-group">
-                            <label>Confirm Password <span class="required">*</span></label>
-                            <i class="fas fa-lock field-icon"></i>
-                            <input type="password" id="regConfirm" placeholder="Re-enter password" required>
-                            <div class="error-text" id="pwdError"><i class="fas fa-circle-exclamation"></i> Passwords do not match</div>
-                        </div>
-                        <button type="submit" class="btn btn-primary" id="regBtn">
-                            <span id="regText">Create Secure Account</span>
-                            <i class="fas fa-circle-notch fa-spin hidden" id="regSpinner"></i>
-                        </button>
-                    </form>
-                    
-                    <div class="form-footer">
-                        Already registered? <button class="link-btn" onclick="App.showLogin()">Sign in</button>
                     </div>
                 </div>
             </div>
@@ -177,7 +187,9 @@
         <div class="auth-overlay"></div>
         <div class="auth-container">
             <div class="auth-brand">
-                <img src="Logo.jpg" alt="SCOSY Logo" class="logo-img">
+                <div class="logo-placeholder">
+                    <i class="fas fa-shield-halved"></i>
+                </div>
                 <div class="brand-subtitle">ANONYMOUS REPORTING</div>
                 <h2>Anonymous Complaint System</h2>
                 <p>Report issues securely without revealing your identity. Zero metadata retention guaranteed.</p>
@@ -265,8 +277,9 @@
             <div class="nav-actions">
                 <div class="security-badge"><i class="fas fa-lock"></i> SECURE</div>
                 <div class="session-timer" id="sessionTimer">29:59</div>
-                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
-                    <i class="fas fa-sun" id="themeIcon"></i>
+                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Switch to light theme">
+                    <i class="fas fa-sun" id="sunIcon"></i>
+                    <i class="fas fa-moon" id="moonIcon"></i>
                 </button>
                 <div class="user-menu"></div>
                     <div class="user-avatar" id="userAvatar" onclick="App.toggleDropdown()">
@@ -796,12 +809,27 @@
                 <div class="content-section" id="sec-profile">
                     <div class="page-header">
                         <h1><i class="fas fa-user"></i> My Profile</h1>
+                        <button class="btn btn-primary btn-sm" onclick="App.openEditProfileModal()">
+                            <i class="fas fa-edit"></i> Edit Profile
+                        </button>
                     </div>
                     <div class="dashboard-grid">
                         <div class="panel" style="text-align: center;">
-                            <div class="profile-avatar-big" id="profileAvatarBig">S</div>
+                            <div class="profile-avatar-container">
+                                <div class="profile-avatar-big" id="profileAvatarBig">S</div>
+                                <div class="profile-image-wrapper" id="profileImageWrapper" style="display: none;">
+                                    <img id="profileImage" src="" alt="Profile Picture" class="profile-image">
+                                </div>
+                                <button class="avatar-upload-btn" onclick="App.openAvatarUpload()">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                                <input type="file" id="avatarInput" accept="image/*" style="display: none;" onchange="App.handleAvatarUpload(event)">
+                            </div>
                             <h2 id="profileName" style="margin-bottom: 6px; font-size: 1.5rem;">Student Name</h2>
                             <p id="profileMatric" style="color: var(--text-muted); font-family: monospace; font-size: 1rem;">PLASU/2024/001</p>
+                            <div class="profile-status">
+                                <span class="status-badge active"><i class="fas fa-circle"></i> Active</span>
+                            </div>
                         </div>
                         <div class="panel">
                             <div class="panel-header">
@@ -829,6 +857,27 @@
                                     <strong id="profileLastLogin">--</strong>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Profile Actions -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-cog"></i> Account Actions</h3>
+                        </div>
+                        <div class="profile-actions">
+                            <button class="action-btn" onclick="App.openChangePasswordModal()">
+                                <i class="fas fa-key"></i> Change Password
+                            </button>
+                            <button class="action-btn" onclick="App.openEditProfileModal()">
+                                <i class="fas fa-edit"></i> Edit Profile Information
+                            </button>
+                            <button class="action-btn" onclick="App.showSection('security')">
+                                <i class="fas fa-shield-halved"></i> View Security Log
+                            </button>
+                            <button class="action-btn" onclick="App.showSection('backup')">
+                                <i class="fas fa-download"></i> Download My Data
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -885,7 +934,9 @@
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <script src="theme-controller.js"></script>
     <script src="script.js"></script>
+    
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
 </body>
 </html>'''

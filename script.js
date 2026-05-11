@@ -87,22 +87,23 @@ const App = (function() {
             }
             
             this.currentTheme = theme;
+            
+            // Add smooth transition class before theme change
+            document.body.classList.add('theme-transitioning');
+            
+            // Apply theme
             document.documentElement.setAttribute('data-theme', theme);
             
-            // Update theme icon
-            const themeIcon = $('#themeIcon');
-            if (themeIcon) {
-                if (theme === 'light') {
-                    themeIcon.className = 'fas fa-moon';
-                } else {
-                    themeIcon.className = 'fas fa-sun';
-                }
-            }
+            // Remove transition class after animation completes
+            setTimeout(() => {
+                document.body.classList.remove('theme-transitioning');
+            }, 300);
             
-            // Update tooltip
-            const themeToggle = $('#themeToggle');
+            // Update tooltip with current theme state
+            const themeToggle = document.getElementById('themeToggle');
             if (themeToggle) {
-                themeToggle.title = `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`;
+                const nextTheme = theme === 'dark' ? 'light' : 'dark';
+                themeToggle.title = `Switch to ${nextTheme} theme`;
             }
         },
         
@@ -173,6 +174,44 @@ const App = (function() {
     async function verifyPassword(password, storedHash, storedSalt) {
         const result = await hashPassword(password, new Uint8Array(storedSalt));
         return JSON.stringify(result.hash) === JSON.stringify(storedHash);
+    }
+
+    // ==================== ADMIN SYSTEM ====================
+    async function initializeAdminSystem() {
+        const admins = load('scosy_admins', {});
+        
+        // Create first admin if no admins exist
+        if (Object.keys(admins).length === 0) {
+            const firstAdmin = {
+                staffId: 'admin',
+                name: 'System Administrator',
+                email: 'admin@plasu.edu.ng',
+                adminLevel: 1, // Level 1 admin (highest)
+                approvalStatus: 'approved',
+                isPrimary: true,
+                createdAt: new Date().toISOString(),
+                lastLogin: null
+            };
+            
+            try {
+                // Hash the default password '123456789'
+                const hashed = await hashPassword('123456789');
+                firstAdmin.passwordHash = hashed.hash;
+                firstAdmin.passwordSalt = hashed.salt;
+                
+                admins['admin'] = firstAdmin;
+                save('scosy_admins', admins);
+                logSecurity('ADMIN_INIT', 'First admin account created with staff ID: admin');
+                
+                console.log('✅ Default admin account created successfully');
+                console.log('📧 Staff ID: admin');
+                console.log('🔑 Password: 123456789');
+            } catch (error) {
+                console.error('❌ Failed to create default admin account:', error);
+            }
+        } else {
+            console.log('ℹ️ Admin system already initialized');
+        }
     }
 
     // ==================== TOASTS ====================
@@ -264,19 +303,19 @@ const App = (function() {
     function showLogin() {
         hide($('#registerPage'));
         hide($('#anonymousPage'));
-        show($('#loginPage'));
-        logSecurity('NAVIGATE', 'Viewed login page');
+        show($('#authPage'));
+        slideToLogin();
     }
 
     function showRegister() {
         hide($('#loginPage'));
         hide($('#anonymousPage'));
-        show($('#registerPage'));
-        logSecurity('NAVIGATE', 'Viewed registration page');
+        show($('#authPage'));
+        slideToRegister();
     }
 
     function showAnonymous() {
-        hide($('#loginPage'));
+        hide($('#authPage'));
         hide($('#registerPage'));
         show($('#anonymousPage'));
         logSecurity('NAVIGATE', 'Viewed anonymous portal');
@@ -284,6 +323,23 @@ const App = (function() {
 
     function showForgot() {
         toast('Contact the CS department admin to reset your password.', 'info');
+    }
+
+    // ==================== SLIDING ANIMATION FUNCTIONS ====================
+    function slideToLogin() {
+        const slider = document.getElementById('authSlider');
+        if (slider) {
+            slider.classList.remove('slide-left');
+            logSecurity('NAVIGATE', 'Slid to login form');
+        }
+    }
+
+    function slideToRegister() {
+        const slider = document.getElementById('authSlider');
+        if (slider) {
+            slider.classList.add('slide-left');
+            logSecurity('NAVIGATE', 'Slid to register form');
+        }
     }
 
     // ==================== REGISTRATION ====================
@@ -362,29 +418,74 @@ const App = (function() {
             return;
         }
 
-        const users = load('scosy_users', {});
-        let user = users[identifier.toUpperCase()];
-        if (!user) {
-            user = Object.values(users).find(u => u.email === identifier);
-        }
-
-        if (!user) {
-            failedAttempts++;
-            if (failedAttempts >= 5) {
-                startLockout();
-                logSecurity('LOCKOUT', `Account locked after ${failedAttempts} failed attempts`);
-            }
-            toast('Invalid credentials. Please try again.', 'error');
-            logSecurity('LOGIN_FAIL', `Failed login for: ${identifier}`);
-            return;
-        }
-
         const spinner = $('#loginSpinner');
         const btnText = $('#loginText');
         show(spinner);
         btnText.textContent = 'Authenticating...';
 
         try {
+            // Check if it's admin login first
+            if (identifier === 'admin' || identifier.includes('@plasu.edu.ng')) {
+                const admins = load('scosy_admins', {});
+                let admin = null;
+                
+                // Find admin by staff ID or email
+                for (const staffId in admins) {
+                    const a = admins[staffId];
+                    if (a.staffId === identifier || a.email === identifier) {
+                        admin = a;
+                        break;
+                    }
+                }
+                
+                if (admin) {
+                    // Verify admin password
+                    const isValid = await verifyPassword(password, admin.passwordHash, admin.passwordSalt);
+                    if (isValid) {
+                        if (admin.approvalStatus === 'pending') {
+                            toast('Your admin account is pending approval. Please wait for Level 1 admin approval.', 'warning');
+                            return;
+                        }
+                        
+                        currentUser = { ...admin, userType: 'admin' };
+                        delete currentUser.passwordHash;
+                        delete currentUser.passwordSalt;
+                        currentUser.lastLogin = new Date().toISOString();
+                        
+                        // Update last login
+                        admins[admin.staffId].lastLogin = currentUser.lastLogin;
+                        save('scosy_admins', admins);
+                        
+                        if (remember) {
+                            save('scosy_remember', { staffId: admin.staffId, userType: 'admin' });
+                        }
+                        
+                        logSecurity('ADMIN_LOGIN_SUCCESS', `Admin login: ${admin.staffId}`);
+                        toast(`Welcome back, ${admin.name}!`, 'success');
+                        enterAdminDashboard();
+                        return;
+                    }
+                }
+            }
+            
+            // Regular student login
+            const users = load('scosy_users', {});
+            let user = users[identifier.toUpperCase()];
+            if (!user) {
+                user = Object.values(users).find(u => u.email === identifier);
+            }
+
+            if (!user) {
+                failedAttempts++;
+                if (failedAttempts >= 5) {
+                    startLockout();
+                    logSecurity('LOCKOUT', `Account locked after ${failedAttempts} failed attempts`);
+                }
+                toast('Invalid credentials. Please try again.', 'error');
+                logSecurity('LOGIN_FAIL', `Failed login for: ${identifier}`);
+                return;
+            }
+
             const valid = await verifyPassword(password, user.passwordHash, user.passwordSalt);
             if (!valid) {
                 failedAttempts++;
@@ -402,12 +503,12 @@ const App = (function() {
             users[user.matric] = user;
             save('scosy_users', users);
 
-            currentUser = { ...user };
+            currentUser = { ...user, userType: 'student' };
             delete currentUser.passwordHash;
             delete currentUser.passwordSalt;
 
             if (remember) {
-                save('scosy_remember', { matric: user.matric, token: crypto.randomUUID() });
+                save('scosy_remember', { matric: user.matric, userType: 'student' });
             }
 
             toast(`Welcome back, ${user.name}!`, 'success');
@@ -445,6 +546,14 @@ const App = (function() {
         $('#profileLastLogin').textContent = currentUser.lastLogin ? formatDate(new Date(currentUser.lastLogin)) : '--';
         $('#profileAvatarBig').textContent = getInitials(currentUser.name);
 
+        // Update dropdown info
+        $('#dropdownName').textContent = currentUser.name;
+        $('#dropdownMatric').textContent = currentUser.matric;
+        $('#dropdownAvatar').textContent = getInitials(currentUser.name);
+
+        // Load user avatar if exists
+        loadUserAvatar();
+
         loadUserData();
         updateStats();
         renderTickets();
@@ -454,6 +563,198 @@ const App = (function() {
 
         document.addEventListener('mousemove', resetSessionTimer);
         document.addEventListener('keydown', resetSessionTimer);
+    }
+
+    function enterAdminDashboard() {
+        // Hide auth pages and show admin dashboard
+        hide($('#authPage'));
+        hide($('#anonymousPage'));
+        
+        // Create admin dashboard if it doesn't exist
+        let adminDashboard = $('#adminDashboard');
+        if (!adminDashboard) {
+            createAdminDashboard();
+        }
+        
+        show($('#adminDashboard'));
+        loadAdminData();
+        startSession();
+
+        document.addEventListener('mousemove', resetSessionTimer);
+        document.addEventListener('keydown', resetSessionTimer);
+    }
+
+    function createAdminDashboard() {
+        const adminHTML = `
+            <div class="dashboard" id="adminDashboard">
+                <nav class="top-nav">
+                    <div class="nav-brand">
+                        <div class="logo-icon"><i class="fas fa-shield-halved"></i></div>
+                        <div class="brand-text">
+                            <h3>SCOSY Admin</h3>
+                            <span>Administrative Portal</span>
+                        </div>
+                    </div>
+                    <div class="nav-actions">
+                        <div class="admin-level-badge">
+                            <i class="fas fa-crown"></i>
+                            Level ${currentUser.adminLevel} Admin
+                        </div>
+                        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Switch to light theme">
+                            <i class="fas fa-sun" id="sunIcon"></i>
+                            <i class="fas fa-moon" id="moonIcon"></i>
+                        </button>
+                        <div class="user-menu">
+                            <div class="user-avatar" id="userAvatar" onclick="App.toggleDropdown()">
+                                <span id="avatarInitial">${getInitials(currentUser.name)}</span>
+                            </div>
+                            <div class="dropdown-menu" id="userDropdown">
+                                <div class="dropdown-header">
+                                    <div class="dropdown-avatar" id="dropdownAvatar">${getInitials(currentUser.name)}</div>
+                                    <div class="dropdown-user-info">
+                                        <span class="dropdown-name" id="dropdownName">${currentUser.name}</span>
+                                        <span class="dropdown-role">Level ${currentUser.adminLevel} Administrator</span>
+                                    </div>
+                                </div>
+                                <div class="dropdown-divider"></div>
+                                <a href="#" onclick="App.logout()"><i class="fas fa-right-from-bracket"></i> Secure Logout</a>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+                
+                <div class="dashboard-layout">
+                    <aside class="sidebar">
+                        <div class="menu-section">
+                            <div class="menu-title">Dashboard</div>
+                            <ul class="menu-list">
+                                <li><a href="#" onclick="App.showAdminSection('overview')" class="active">
+                                    <i class="fas fa-chart-line"></i> Overview
+                                </a></li>
+                            </ul>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-title">Complaints</div>
+                            <ul class="menu-list">
+                                <li><a href="#" onclick="App.showAdminSection('complaints')">
+                                    <i class="fas fa-exclamation-triangle"></i> All Complaints
+                                </a></li>
+                                <li><a href="#" onclick="App.showAdminSection('pending')">
+                                    <i class="fas fa-clock"></i> Pending Review
+                                </a></li>
+                            </ul>
+                        </div>
+                        ${currentUser.adminLevel === 1 ? `
+                        <div class="menu-section">
+                            <div class="menu-title">Administration</div>
+                            <ul class="menu-list">
+                                <li><a href="#" onclick="App.showAdminSection('users')">
+                                    <i class="fas fa-users"></i> User Management
+                                </a></li>
+                                <li><a href="#" onclick="App.showAdminSection('admins')">
+                                    <i class="fas fa-user-shield"></i> Admin Management
+                                </a></li>
+                            </ul>
+                        </div>
+                        ` : ''}
+                    </aside>
+                    
+                    <main class="content-area">
+                        <div class="content-section active" id="admin-overview">
+                            <div class="welcome-banner">
+                                <div class="welcome-text">
+                                    <h2>Welcome back, ${currentUser.name.split(' ')[0]}!</h2>
+                                    <p><strong>Level ${currentUser.adminLevel} Administrator</strong> | SCOSY Admin Portal</p>
+                                </div>
+                                <div class="welcome-avatar">${getInitials(currentUser.name)}</div>
+                            </div>
+                            
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div>
+                                    <div class="stat-info">
+                                        <h4>Total Complaints</h4>
+                                        <p id="totalComplaints">0</p>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon amber"><i class="fas fa-clock"></i></div>
+                                    <div class="stat-info">
+                                        <h4>Pending Review</h4>
+                                        <p id="pendingComplaints">0</p>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+                                    <div class="stat-info">
+                                        <h4>Registered Users</h4>
+                                        <p id="totalUsers">0</p>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                                    <div class="stat-info">
+                                        <h4>Resolved Today</h4>
+                                        <p id="resolvedToday">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="panel">
+                                <div class="panel-header">
+                                    <h3><i class="fas fa-chart-bar"></i> Admin Dashboard</h3>
+                                </div>
+                                <p>Welcome to the SCOSY Admin Portal. Use the sidebar to navigate between different administrative functions.</p>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', adminHTML);
+    }
+
+    function loadAdminData() {
+        // Load admin statistics
+        const users = load('scosy_users', {});
+        const allComplaints = getAllComplaints();
+        
+        const totalUsers = Object.keys(users).length;
+        const totalComplaints = allComplaints.length;
+        const pendingComplaints = allComplaints.filter(c => c.status === 'pending').length;
+        const resolvedToday = allComplaints.filter(c => {
+            return c.status === 'resolved' && 
+                   new Date(c.resolvedAt || c.updatedAt).toDateString() === new Date().toDateString();
+        }).length;
+        
+        // Update stats display
+        const totalComplaintsEl = $('#totalComplaints');
+        const pendingComplaintsEl = $('#pendingComplaints');
+        const totalUsersEl = $('#totalUsers');
+        const resolvedTodayEl = $('#resolvedToday');
+        
+        if (totalComplaintsEl) totalComplaintsEl.textContent = totalComplaints;
+        if (pendingComplaintsEl) pendingComplaintsEl.textContent = pendingComplaints;
+        if (totalUsersEl) totalUsersEl.textContent = totalUsers;
+        if (resolvedTodayEl) resolvedTodayEl.textContent = resolvedToday;
+    }
+
+    function getAllComplaints() {
+        // Collect all complaints from all users
+        const users = load('scosy_users', {});
+        const allComplaints = [];
+        
+        for (const matric in users) {
+            const userComplaints = load('scosy_tickets_' + matric, []);
+            allComplaints.push(...userComplaints);
+        }
+        
+        // Also include anonymous complaints
+        const anonComplaints = load('scosy_anonymous_global', []);
+        allComplaints.push(...anonComplaints);
+        
+        return allComplaints;
     }
 
     // ==================== LOAD USER DATA ====================
@@ -643,6 +944,297 @@ const App = (function() {
     $('#userDropdown').classList.toggle('show');
     }
 
+    // ==================== PROFILE MANAGEMENT ====================
+    function openEditProfileModal() {
+        // Create and show edit profile modal
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'editProfileModal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <button class="modal-close" onclick="App.closeEditProfileModal()"><i class="fas fa-times"></i></button>
+                <h2><i class="fas fa-edit"></i> Edit Profile</h2>
+                <p class="modal-desc">Update your profile information</p>
+                <form id="editProfileForm">
+                    <div class="input-group">
+                        <label>Full Name <span class="required">*</span></label>
+                        <i class="fas fa-user field-icon"></i>
+                        <input type="text" id="editName" value="${currentUser.name}" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Email Address <span class="required">*</span></label>
+                        <i class="fas fa-envelope field-icon"></i>
+                        <input type="email" id="editEmail" value="${currentUser.email}" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Level <span class="required">*</span></label>
+                        <i class="fas fa-layer-group field-icon"></i>
+                        <select id="editLevel" required>
+                            <option value="100" ${currentUser.level === '100' ? 'selected' : ''}>100 Level</option>
+                            <option value="200" ${currentUser.level === '200' ? 'selected' : ''}>200 Level</option>
+                            <option value="300" ${currentUser.level === '300' ? 'selected' : ''}>300 Level</option>
+                            <option value="400" ${currentUser.level === '400' ? 'selected' : ''}>400 Level</option>
+                            <option value="500" ${currentUser.level === '500' ? 'selected' : ''}>500 Level (PGD)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.style.display = 'flex';
+        
+        // Bind form handler
+        document.getElementById('editProfileForm').addEventListener('submit', handleEditProfile);
+    }
+
+    function closeEditProfileModal() {
+        const modal = document.getElementById('editProfileModal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+
+    function openChangePasswordModal() {
+        // Create and show change password modal
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'changePasswordModal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <button class="modal-close" onclick="App.closeChangePasswordModal()"><i class="fas fa-times"></i></button>
+                <h2><i class="fas fa-key"></i> Change Password</h2>
+                <p class="modal-desc">Update your account password</p>
+                <form id="changePasswordForm">
+                    <div class="input-group">
+                        <label>Current Password <span class="required">*</span></label>
+                        <i class="fas fa-lock field-icon"></i>
+                        <input type="password" id="currentPassword" required>
+                    </div>
+                    <div class="input-group">
+                        <label>New Password <span class="required">*</span></label>
+                        <i class="fas fa-key field-icon"></i>
+                        <input type="password" id="newPassword" required minlength="8">
+                        <div class="strength-bar" id="newPwdStrength"><div class="strength-fill" id="newPwdBar"></div></div>
+                    </div>
+                    <div class="input-group">
+                        <label>Confirm New Password <span class="required">*</span></label>
+                        <i class="fas fa-key field-icon"></i>
+                        <input type="password" id="confirmNewPassword" required>
+                        <div class="error-text" id="newPwdError"><i class="fas fa-circle-exclamation"></i> Passwords do not match</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Update Password
+                    </button>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.style.display = 'flex';
+        
+        // Bind form handler
+        document.getElementById('changePasswordForm').addEventListener('submit', handleChangePassword);
+    }
+
+    function closeChangePasswordModal() {
+        const modal = document.getElementById('changePasswordModal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+
+    function openAvatarUpload() {
+        document.getElementById('avatarInput').click();
+    }
+
+    function handleAvatarUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            toast('Please select a valid image file.', 'error');
+            return;
+        }
+
+        // Validate file size (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            toast('Image size must be less than 2MB.', 'error');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imageData = e.target.result;
+            
+            // Save to localStorage
+            try {
+                localStorage.setItem(`scosy_avatar_${currentUser.matric}`, imageData);
+                
+                // Update UI
+                updateAvatarDisplay(imageData);
+                
+                toast('Profile picture updated successfully!', 'success');
+                logActivity('Profile Updated', 'Changed profile picture');
+            } catch (error) {
+                toast('Failed to save profile picture. File may be too large.', 'error');
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function updateAvatarDisplay(imageData) {
+        // Update main profile avatar
+        const profileAvatarBig = document.getElementById('profileAvatarBig');
+        const profileImageWrapper = document.getElementById('profileImageWrapper');
+        const profileImage = document.getElementById('profileImage');
+        
+        if (imageData) {
+            profileImage.src = imageData;
+            profileAvatarBig.style.display = 'none';
+            profileImageWrapper.style.display = 'block';
+        } else {
+            profileAvatarBig.style.display = 'flex';
+            profileImageWrapper.style.display = 'none';
+        }
+
+        // Update dropdown avatar
+        const dropdownAvatar = document.getElementById('dropdownAvatar');
+        if (imageData && dropdownAvatar) {
+            dropdownAvatar.style.backgroundImage = `url(${imageData})`;
+            dropdownAvatar.style.backgroundSize = 'cover';
+            dropdownAvatar.style.backgroundPosition = 'center';
+            dropdownAvatar.textContent = '';
+        }
+
+        // Update top nav avatar
+        const userAvatar = document.getElementById('userAvatar');
+        if (imageData && userAvatar) {
+            userAvatar.style.backgroundImage = `url(${imageData})`;
+            userAvatar.style.backgroundSize = 'cover';
+            userAvatar.style.backgroundPosition = 'center';
+            const avatarInitial = document.getElementById('avatarInitial');
+            if (avatarInitial) avatarInitial.style.display = 'none';
+        }
+    }
+
+    async function handleEditProfile(e) {
+        e.preventDefault();
+        const name = document.getElementById('editName').value.trim();
+        const email = document.getElementById('editEmail').value.trim();
+        const level = document.getElementById('editLevel').value;
+
+        if (!name || !email || !level) {
+            toast('Please fill all required fields.', 'error');
+            return;
+        }
+
+        try {
+            // Update user data
+            const users = load('scosy_users', {});
+            const user = users[currentUser.matric];
+            if (user) {
+                user.name = name;
+                user.email = email;
+                user.level = level;
+                user.updatedAt = new Date().toISOString();
+                
+                users[currentUser.matric] = user;
+                save('scosy_users', users);
+                
+                // Update current user
+                currentUser.name = name;
+                currentUser.email = email;
+                currentUser.level = level;
+                
+                // Update UI
+                updateProfileDisplay();
+                
+                toast('Profile updated successfully!', 'success');
+                logActivity('Profile Updated', 'Updated profile information');
+                closeEditProfileModal();
+            }
+        } catch (error) {
+            toast('Failed to update profile. Please try again.', 'error');
+        }
+    }
+
+    async function handleChangePassword(e) {
+        e.preventDefault();
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmNewPassword').value;
+
+        if (newPassword !== confirmPassword) {
+            document.getElementById('newPwdError').style.display = 'flex';
+            return;
+        }
+        document.getElementById('newPwdError').style.display = 'none';
+
+        if (newPassword.length < 8) {
+            toast('New password must be at least 8 characters.', 'error');
+            return;
+        }
+
+        try {
+            // Verify current password
+            const users = load('scosy_users', {});
+            const user = users[currentUser.matric];
+            
+            const isValid = await verifyPassword(currentPassword, user.passwordHash, user.passwordSalt);
+            if (!isValid) {
+                toast('Current password is incorrect.', 'error');
+                return;
+            }
+
+            // Hash new password
+            const hashed = await hashPassword(newPassword);
+            user.passwordHash = hashed.hash;
+            user.passwordSalt = hashed.salt;
+            user.passwordChangedAt = new Date().toISOString();
+            
+            users[currentUser.matric] = user;
+            save('scosy_users', users);
+            
+            toast('Password updated successfully!', 'success');
+            logActivity('Security', 'Password changed');
+            logSecurity('PASSWORD_CHANGE', `Password changed for ${currentUser.matric}`);
+            closeChangePasswordModal();
+        } catch (error) {
+            toast('Failed to update password. Please try again.', 'error');
+        }
+    }
+
+    function updateProfileDisplay() {
+        // Update all profile displays
+        document.getElementById('profileName').textContent = currentUser.name;
+        document.getElementById('profileEmail').textContent = currentUser.email;
+        document.getElementById('profileLevel').textContent = currentUser.level + ' Level';
+        
+        // Update dropdown
+        document.getElementById('dropdownName').textContent = currentUser.name;
+        
+        // Update welcome message
+        document.getElementById('welcomeName').textContent = currentUser.name.split(' ')[0];
+        
+        // Update avatars with initials
+        const initials = getInitials(currentUser.name);
+        document.getElementById('profileAvatarBig').textContent = initials;
+        document.getElementById('dropdownAvatar').textContent = initials;
+        document.getElementById('avatarInitial').textContent = initials;
+        document.getElementById('welcomeAvatar').textContent = initials;
+    }
+
+    function loadUserAvatar() {
+        // Load saved avatar from localStorage
+        const savedAvatar = localStorage.getItem(`scosy_avatar_${currentUser.matric}`);
+        if (savedAvatar) {
+            updateAvatarDisplay(savedAvatar);
+        }
+    }
+
     // ==================== LOGOUT ====================
     function logout() {
         if (sessionTimer) clearInterval(sessionTimer);
@@ -654,6 +1246,190 @@ const App = (function() {
         hide($('#dashboard'));
         show($('#loginPage'));
         toast('Logged out securely.', 'info');
+    }) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            toast('Please select a valid image file.', 'error');
+            return;
+        }
+
+        // Validate file size (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            toast('Image size must be less than 2MB.', 'error');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imageData = e.target.result;
+            
+            // Save to localStorage
+            try {
+                localStorage.setItem(`scosy_avatar_${currentUser.matric}`, imageData);
+                
+                // Update UI
+                updateAvatarDisplay(imageData);
+                
+                toast('Profile picture updated successfully!', 'success');
+                logActivity('Profile Updated', 'Changed profile picture');
+            } catch (error) {
+                toast('Failed to save profile picture. File may be too large.', 'error');
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function updateAvatarDisplay(imageData) {
+        // Update main profile avatar
+        const profileAvatarBig = document.getElementById('profileAvatarBig');
+        const profileImageWrapper = document.getElementById('profileImageWrapper');
+        const profileImage = document.getElementById('profileImage');
+        
+        if (imageData) {
+            profileImage.src = imageData;
+            profileAvatarBig.style.display = 'none';
+            profileImageWrapper.style.display = 'block';
+        } else {
+            profileAvatarBig.style.display = 'flex';
+            profileImageWrapper.style.display = 'none';
+        }
+
+        // Update dropdown avatar
+        const dropdownAvatar = document.getElementById('dropdownAvatar');
+        if (imageData && dropdownAvatar) {
+            dropdownAvatar.style.backgroundImage = `url(${imageData})`;
+            dropdownAvatar.style.backgroundSize = 'cover';
+            dropdownAvatar.style.backgroundPosition = 'center';
+            dropdownAvatar.textContent = '';
+        }
+
+        // Update top nav avatar
+        const userAvatar = document.getElementById('userAvatar');
+        if (imageData && userAvatar) {
+            userAvatar.style.backgroundImage = `url(${imageData})`;
+            userAvatar.style.backgroundSize = 'cover';
+            userAvatar.style.backgroundPosition = 'center';
+            const avatarInitial = document.getElementById('avatarInitial');
+            if (avatarInitial) avatarInitial.style.display = 'none';
+        }
+    }
+
+    async function handleEditProfile(e) {
+        e.preventDefault();
+        const name = document.getElementById('editName').value.trim();
+        const email = document.getElementById('editEmail').value.trim();
+        const level = document.getElementById('editLevel').value;
+
+        if (!name || !email || !level) {
+            toast('Please fill all required fields.', 'error');
+            return;
+        }
+
+        try {
+            // Update user data
+            const users = load('scosy_users', {});
+            const user = users[currentUser.matric];
+            if (user) {
+                user.name = name;
+                user.email = email;
+                user.level = level;
+                user.updatedAt = new Date().toISOString();
+                
+                users[currentUser.matric] = user;
+                save('scosy_users', users);
+                
+                // Update current user
+                currentUser.name = name;
+                currentUser.email = email;
+                currentUser.level = level;
+                
+                // Update UI
+                updateProfileDisplay();
+                
+                toast('Profile updated successfully!', 'success');
+                logActivity('Profile Updated', 'Updated profile information');
+                closeEditProfileModal();
+            }
+        } catch (error) {
+            toast('Failed to update profile. Please try again.', 'error');
+        }
+    }
+
+    async function handleChangePassword(e) {
+        e.preventDefault();
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmNewPassword').value;
+
+        if (newPassword !== confirmPassword) {
+            document.getElementById('newPwdError').style.display = 'flex';
+            return;
+        }
+        document.getElementById('newPwdError').style.display = 'none';
+
+        if (newPassword.length < 8) {
+            toast('New password must be at least 8 characters.', 'error');
+            return;
+        }
+
+        try {
+            // Verify current password
+            const users = load('scosy_users', {});
+            const user = users[currentUser.matric];
+            
+            const isValid = await verifyPassword(currentPassword, user.passwordHash, user.passwordSalt);
+            if (!isValid) {
+                toast('Current password is incorrect.', 'error');
+                return;
+            }
+
+            // Hash new password
+            const hashed = await hashPassword(newPassword);
+            user.passwordHash = hashed.hash;
+            user.passwordSalt = hashed.salt;
+            user.passwordChangedAt = new Date().toISOString();
+            
+            users[currentUser.matric] = user;
+            save('scosy_users', users);
+            
+            toast('Password updated successfully!', 'success');
+            logActivity('Security', 'Password changed');
+            logSecurity('PASSWORD_CHANGE', `Password changed for ${currentUser.matric}`);
+            closeChangePasswordModal();
+        } catch (error) {
+            toast('Failed to update password. Please try again.', 'error');
+        }
+    }
+
+    function updateProfileDisplay() {
+        // Update all profile displays
+        document.getElementById('profileName').textContent = currentUser.name;
+        document.getElementById('profileEmail').textContent = currentUser.email;
+        document.getElementById('profileLevel').textContent = currentUser.level + ' Level';
+        
+        // Update dropdown
+        document.getElementById('dropdownName').textContent = currentUser.name;
+        
+        // Update welcome message
+        document.getElementById('welcomeName').textContent = currentUser.name.split(' ')[0];
+        
+        // Update avatars with initials
+        const initials = getInitials(currentUser.name);
+        document.getElementById('profileAvatarBig').textContent = initials;
+        document.getElementById('dropdownAvatar').textContent = initials;
+        document.getElementById('avatarInitial').textContent = initials;
+        document.getElementById('welcomeAvatar').textContent = initials;
+    }
+
+    function loadUserAvatar() {
+        // Load saved avatar from localStorage
+        const savedAvatar = localStorage.getItem(`scosy_avatar_${currentUser.matric}`);
+        if (savedAvatar) {
+            updateAvatarDisplay(savedAvatar);
+        }
     }
 
     // ==================== ACTIVITY RENDER ====================
@@ -1018,50 +1794,65 @@ Could you rephrase or select a quick reply below?`;
         bar.style.background = colors[strength - 1] || '#ef4444';
     }
 
-    // ==================== INIT ====================
+    // ==================== INITIALIZATION ====================
     function init() {
-        // Form bindings
-        $('#loginForm')?.addEventListener('submit', handleLogin);
-        $('#registerForm')?.addEventListener('submit', handleRegister);
-        $('#anonForm')?.addEventListener('submit', handleAnonymousSubmit);
-        $('#complaintForm')?.addEventListener('submit', handleComplaintSubmit);
-
-        // Password strength
-        $('#regPassword')?.addEventListener('input', checkPasswordStrength);
-
-        // Close dropdown on outside click
-        document.addEventListener('click', (e) => {
-            const dropdown = $('#userDropdown');
-            const avatar = $('#userAvatar');
-            if (dropdown && avatar && !dropdown.contains(e.target) && !avatar.contains(e.target)) {
-                hide(dropdown);
-            }
-        });
-
-        // Check remembered session
-        const remember = load('scosy_remember', null);
-        if (remember) {
+        // Initialize theme controller first to prevent flash
+        ThemeController.init();
+        
+        // Initialize admin system
+        initializeAdminSystem();
+        
+        // Check for existing user session
+        const rememberedUser = load('scosy_remember', null);
+        if (rememberedUser && rememberedUser.matric) {
+            // Auto-login if remembered
             const users = load('scosy_users', {});
-            const user = users[remember.matric];
+            const user = users[rememberedUser.matric];
             if (user) {
                 currentUser = { ...user };
                 delete currentUser.passwordHash;
                 delete currentUser.passwordSalt;
                 enterDashboard();
-                toast('Welcome back! Session restored.', 'success');
+                return;
             }
         }
-
-        // Seed demo data if empty (for first-time users)
-        const users = load('scosy_users', {});
-        if (Object.keys(users).length === 0) {
-            // No pre-seeded accounts for security
+        
+        // Show login page if no valid session
+        showLogin();
+        
+        // Bind form event handlers
+        const loginForm = $('#loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', handleLogin);
         }
-
-        logSecurity('INIT', 'SCOSY application initialized');
+        
+        const registerForm = $('#registerForm');
+        if (registerForm) {
+            registerForm.addEventListener('submit', handleRegister);
+        }
+        
+        const anonForm = $('#anonForm');
+        if (anonForm) {
+            anonForm.addEventListener('submit', handleAnonymousSubmit);
+        }
+        
+        const complaintForm = $('#complaintForm');
+        if (complaintForm) {
+            complaintForm.addEventListener('submit', handleComplaintSubmit);
+        }
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.user-menu')) {
+                const dropdown = $('#userDropdown');
+                if (dropdown) dropdown.classList.remove('show');
+            }
+        });
+        
+        logSecurity('INIT', 'SCOSY application initialized with theme support');
     }
 
-    // ==================== PUBLIC API ====================
+    // ==================== PUBLIC INTERFACE ====================
     return {
         init,
         showLogin,
@@ -1078,7 +1869,16 @@ Could you rephrase or select a quick reply below?`;
         loadAdvancedAI,
         clearChat,
         exportBackup,
-        importBackup
+        importBackup,
+        ThemeController,
+        openEditProfileModal,
+        closeEditProfileModal,
+        openChangePasswordModal,
+        closeChangePasswordModal,
+        openAvatarUpload,
+        handleAvatarUpload,
+        slideToLogin,
+        slideToRegister
     };
 })();
 
@@ -1091,9 +1891,6 @@ function toggleTheme() {
 
 // Start application when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize theme controller first
-    if (typeof App !== 'undefined' && App.ThemeController) {
-        App.ThemeController.init();
-    }
+    // Initialize the main app (which includes theme controller)
     App.init();
 });
