@@ -3,11 +3,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>SCOSY | Student Complaint System</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="SCOSY">
+    
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+    
     <script>
         // Initialize theme immediately to prevent flash
         (function() {
@@ -16,9 +31,31 @@
             const theme = savedTheme || systemPreference;
             document.documentElement.setAttribute('data-theme', theme);
         })();
+        
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker registered:', registration);
+                    })
+                    .catch(error => {
+                        console.log('❌ Service Worker registration failed:', error);
+                    });
+            });
+        }
     </script>
 </head>
 <body>
+    <!-- Connection Status Indicator -->
+    <div class="connection-status status-online" id="connectionStatus">
+        <i class="fas fa-wifi"></i>
+        <span>Online</span>
+        <div class="sync-indicator" id="syncIndicator"></div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
 
     <!-- ==================== AUTHENTICATION PAGES ==================== -->
     
@@ -268,6 +305,9 @@
         <!-- Top Navigation -->
         <nav class="top-nav">
             <div class="nav-brand">
+                <button class="mobile-menu-toggle" id="mobileMenuToggle" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
                 <div class="logo-icon"><i class="fas fa-shield-halved"></i></div>
                 <div class="brand-text">
                     <h3>SCOSY Portal</h3>
@@ -932,11 +972,16 @@
     </div>
 
     <!-- Toast Container -->
+    <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
+    <!-- Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="responsive.js"></script>
+    <script src="sync-manager.js"></script>
+    <script src="performance.js"></script>
+    <script src="test-suite.js"></script>
+    <script src="deploy-optimize.js"></script>
     <script src="script.js"></script>
-    
-    <!-- Toast Container -->
-    <div id="toastContainer" class="toast-container"></div>
 </body>
-</html>'''
+</html>

@@ -63,6 +63,42 @@ This feature involves creating a comprehensive full stack web application that p
 
 ### Requirement 6
 
+**User Story:** As an admin, I want a dedicated dashboard to manage student complaints, so that I can efficiently review and respond to all student issues from any device.
+
+#### Acceptance Criteria
+
+1. WHEN an admin logs in THEN the system SHALL display an admin dashboard with all student complaints
+2. WHEN viewing complaints THEN the system SHALL show complaint details, student information, and status
+3. WHEN an admin selects a complaint THEN the system SHALL allow personal replies to individual students
+4. WHEN an admin wants to make announcements THEN the system SHALL provide a publish feature for public responses
+5. IF accessed from mobile THEN the admin dashboard SHALL provide touch-optimized complaint management interface
+
+### Requirement 7
+
+**User Story:** As the first admin, I want to control admin account creation, so that I can maintain security and proper access control.
+
+#### Acceptance Criteria
+
+1. WHEN the system is first initialized THEN it SHALL create a default admin account with username "admin" and password "123456789"
+2. WHEN new users register THEN the system SHALL provide a role dropdown with "student" and "admin" options
+3. WHEN someone requests admin access THEN the system SHALL require approval from the first admin
+4. WHEN the first admin reviews requests THEN the system SHALL show pending admin account requests for approval or rejection
+5. WHEN admin accounts are approved THEN the system SHALL notify the new admin and activate their account
+
+### Requirement 8
+
+**User Story:** As a student, I want to submit complaints that admins can see, so that I can get help with my issues.
+
+#### Acceptance Criteria
+
+1. WHEN a student is logged in THEN the system SHALL provide a complaint submission form
+2. WHEN submitting complaints THEN the system SHALL capture complaint details, category, and timestamp
+3. WHEN a complaint is submitted THEN the system SHALL notify relevant admins
+4. WHEN admins reply THEN the system SHALL notify the student of the response
+5. IF using mobile THEN the complaint form SHALL be optimized for touch input and smaller screens
+
+### Requirement 9
+
 **User Story:** As a developer, I want a scalable backend architecture, so that the application can handle multiple concurrent users across different devices efficiently.
 
 #### Acceptance Criteria

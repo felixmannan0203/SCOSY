@@ -45,7 +45,8 @@ const db = {
     admins: new Map(),
     complaints: new Map(),
     messages: new Map(),
-    sessions: new Map()
+    sessions: new Map(),
+    devices: new Map() // New: Device registration storage
 };
 
 // JWT Secret
@@ -148,7 +149,7 @@ app.post('/api/auth/register', async (req, res) => {
 // Login
 app.post('/api/auth/login', async (req, res) => {
     try {
-        const { identifier, password } = req.body;
+        const { identifier, password, deviceInfo } = req.body;
 
         if (!identifier || !password) {
             return res.status(400).json({ error: 'Identifier and password are required' });
@@ -196,27 +197,60 @@ app.post('/api/auth/login', async (req, res) => {
         // Update last login
         user.lastLogin = new Date().toISOString();
 
-        // Generate JWT token
+        // Register device if deviceInfo provided
+        let deviceId = null;
+        if (deviceInfo) {
+            deviceId = uuidv4();
+            const device = {
+                id: deviceId,
+                userId: user.staffId || user.matric,
+                userType,
+                type: deviceInfo.type || 'unknown',
+                userAgent: deviceInfo.userAgent || '',
+                platform: deviceInfo.platform || 'unknown',
+                screenSize: deviceInfo.screenSize || { width: 0, height: 0 },
+                hasTouch: deviceInfo.hasTouch || false,
+                pixelRatio: deviceInfo.pixelRatio || 1,
+                lastActive: new Date().toISOString(),
+                createdAt: new Date().toISOString(),
+                syncEnabled: true,
+                pushToken: deviceInfo.pushToken || null
+            };
+
+            db.devices.set(deviceId, device);
+
+            // Update user's device list
+            if (!user.devices) user.devices = [];
+            if (!user.devices.includes(deviceId)) {
+                user.devices.push(deviceId);
+            }
+            user.lastSyncTime = new Date().toISOString();
+        }
+
+        // Generate JWT token with device information
         const token = jwt.sign(
             { 
                 id: user.staffId || user.matric,
                 userType,
-                adminLevel: user.adminLevel || null
+                adminLevel: user.adminLevel || null,
+                deviceId: deviceId
             },
             JWT_SECRET,
             { expiresIn: '24h' }
         );
 
-        // Store session
+        // Store session with device information
         db.sessions.set(token, {
             userId: user.staffId || user.matric,
             userType,
+            deviceId: deviceId,
             createdAt: new Date().toISOString()
         });
 
         res.json({
             message: 'Login successful',
             token,
+            deviceId,
             user: {
                 id: user.staffId || user.matric,
                 name: user.name,
@@ -379,6 +413,151 @@ app.post('/api/complaints/:id/respond', authenticateToken, (req, res) => {
     }
 });
 
+// ==================== DEVICE MANAGEMENT ROUTES ====================
+
+// Register device
+app.post('/api/devices/register', authenticateToken, (req, res) => {
+    try {
+        const { deviceInfo } = req.body;
+        
+        if (!deviceInfo || !deviceInfo.type || !deviceInfo.userAgent) {
+            return res.status(400).json({ error: 'Device information is required' });
+        }
+
+        const deviceId = uuidv4();
+        const device = {
+            id: deviceId,
+            userId: req.user.id,
+            userType: req.user.userType,
+            type: deviceInfo.type, // mobile, tablet, desktop
+            userAgent: deviceInfo.userAgent,
+            platform: deviceInfo.platform || 'unknown',
+            screenSize: deviceInfo.screenSize || { width: 0, height: 0 },
+            hasTouch: deviceInfo.hasTouch || false,
+            pixelRatio: deviceInfo.pixelRatio || 1,
+            lastActive: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+            syncEnabled: true,
+            pushToken: deviceInfo.pushToken || null
+        };
+
+        db.devices.set(deviceId, device);
+
+        // Update user's device list
+        const userKey = req.user.userType === 'admin' ? 'admins' : 'users';
+        const user = db[userKey].get(req.user.id);
+        if (user) {
+            if (!user.devices) user.devices = [];
+            user.devices.push(deviceId);
+            user.lastSyncTime = new Date().toISOString();
+        }
+
+        res.status(201).json({
+            message: 'Device registered successfully',
+            deviceId,
+            device: {
+                id: deviceId,
+                type: device.type,
+                platform: device.platform,
+                lastActive: device.lastActive
+            }
+        });
+    } catch (error) {
+        console.error('Device registration error:', error);
+        res.status(500).json({ error: 'Failed to register device' });
+    }
+});
+
+// Get user devices
+app.get('/api/devices', authenticateToken, (req, res) => {
+    try {
+        const userDevices = Array.from(db.devices.values())
+            .filter(device => device.userId === req.user.id)
+            .map(device => ({
+                id: device.id,
+                type: device.type,
+                platform: device.platform,
+                lastActive: device.lastActive,
+                syncEnabled: device.syncEnabled,
+                hasTouch: device.hasTouch
+            }));
+
+        res.json(userDevices);
+    } catch (error) {
+        console.error('Get devices error:', error);
+        res.status(500).json({ error: 'Failed to fetch devices' });
+    }
+});
+
+// Update device activity
+app.put('/api/devices/:deviceId/activity', authenticateToken, (req, res) => {
+    try {
+        const { deviceId } = req.params;
+        const device = db.devices.get(deviceId);
+
+        if (!device || device.userId !== req.user.id) {
+            return res.status(404).json({ error: 'Device not found' });
+        }
+
+        device.lastActive = new Date().toISOString();
+        
+        res.json({ message: 'Device activity updated' });
+    } catch (error) {
+        console.error('Update device activity error:', error);
+        res.status(500).json({ error: 'Failed to update device activity' });
+    }
+});
+
+// Remove device
+app.delete('/api/devices/:deviceId', authenticateToken, (req, res) => {
+    try {
+        const { deviceId } = req.params;
+        const device = db.devices.get(deviceId);
+
+        if (!device || device.userId !== req.user.id) {
+            return res.status(404).json({ error: 'Device not found' });
+        }
+
+        db.devices.delete(deviceId);
+
+        // Remove from user's device list
+        const userKey = req.user.userType === 'admin' ? 'admins' : 'users';
+        const user = db[userKey].get(req.user.id);
+        if (user && user.devices) {
+            user.devices = user.devices.filter(id => id !== deviceId);
+        }
+
+        res.json({ message: 'Device removed successfully' });
+    } catch (error) {
+        console.error('Remove device error:', error);
+        res.status(500).json({ error: 'Failed to remove device' });
+    }
+});
+
+// Toggle device sync
+app.put('/api/devices/:deviceId/sync', authenticateToken, (req, res) => {
+    try {
+        const { deviceId } = req.params;
+        const { syncEnabled } = req.body;
+        const device = db.devices.get(deviceId);
+
+        if (!device || device.userId !== req.user.id) {
+            return res.status(404).json({ error: 'Device not found' });
+        }
+
+        device.syncEnabled = syncEnabled;
+        device.lastActive = new Date().toISOString();
+
+        res.json({ 
+            message: 'Device sync settings updated',
+            syncEnabled: device.syncEnabled
+        });
+    } catch (error) {
+        console.error('Toggle device sync error:', error);
+        res.status(500).json({ error: 'Failed to update sync settings' });
+    }
+});
+
 // ==================== ADMIN ROUTES ====================
 
 // Get dashboard stats (admin only)
@@ -415,13 +594,214 @@ app.get('/api/admin/stats', authenticateToken, (req, res) => {
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
-    socket.on('join-room', (userId) => {
+    // Join user-specific room for cross-device sync
+    socket.on('join-room', (data) => {
+        const { userId, deviceId } = data;
         socket.join(userId);
-        console.log(`User ${userId} joined room`);
+        socket.join(`device-${deviceId}`);
+        
+        // Update device activity
+        const device = db.devices.get(deviceId);
+        if (device) {
+            device.lastActive = new Date().toISOString();
+            device.socketId = socket.id;
+        }
+        
+        console.log(`User ${userId} joined room with device ${deviceId}`);
+        
+        // Notify other devices of new connection
+        socket.to(userId).emit('device-connected', {
+            deviceId,
+            timestamp: new Date().toISOString()
+        });
     });
 
+    // Handle cross-device data sync
+    socket.on('sync-data', (data) => {
+        const { userId, deviceId, syncType, payload, timestamp } = data;
+        
+        // Broadcast to all other devices of the same user
+        socket.to(userId).emit('data-synced', {
+            syncType,
+            payload,
+            sourceDevice: deviceId,
+            timestamp
+        });
+        
+        console.log(`Data synced for user ${userId}: ${syncType}`);
+    });
+
+    // Handle user preferences sync
+    socket.on('sync-preferences', (data) => {
+        const { userId, preferences, deviceId } = data;
+        
+        // Update user preferences in database
+        const userKey = data.userType === 'admin' ? 'admins' : 'users';
+        const user = db[userKey].get(userId);
+        if (user) {
+            user.preferences = { ...user.preferences, ...preferences };
+            user.lastSyncTime = new Date().toISOString();
+        }
+        
+        // Sync to all other devices
+        socket.to(userId).emit('preferences-synced', {
+            preferences,
+            sourceDevice: deviceId,
+            timestamp: new Date().toISOString()
+        });
+    });
+
+    // Handle complaint sync
+    socket.on('sync-complaint', (data) => {
+        const { userId, complaint, action } = data;
+        
+        // Broadcast complaint updates to all user devices
+        socket.to(userId).emit('complaint-synced', {
+            complaint,
+            action, // 'created', 'updated', 'deleted'
+            timestamp: new Date().toISOString()
+        });
+        
+        // If it's a new complaint, notify admins
+        if (action === 'created') {
+            io.emit('new-complaint', {
+                id: complaint.id,
+                category: complaint.category,
+                subject: complaint.subject,
+                priority: complaint.priority,
+                isAnonymous: complaint.isAnonymous,
+                createdAt: complaint.createdAt
+            });
+        }
+    });
+
+    // Handle admin response sync
+    socket.on('sync-admin-response', (data) => {
+        const { complaintId, response, isPublic } = data;
+        
+        if (isPublic) {
+            // Broadcast public responses to all users
+            io.emit('public-response', {
+                complaintId,
+                response
+            });
+        } else {
+            // Send private response to specific user's devices
+            const complaint = db.complaints.get(complaintId);
+            if (complaint && complaint.submitterId) {
+                io.to(complaint.submitterId).emit('private-response', {
+                    complaintId,
+                    response
+                });
+            }
+        }
+    });
+
+    // Handle device status updates
+    socket.on('device-status', (data) => {
+        const { deviceId, status } = data;
+        const device = db.devices.get(deviceId);
+        
+        if (device) {
+            device.status = status;
+            device.lastActive = new Date().toISOString();
+            
+            // Notify other devices of status change
+            socket.to(device.userId).emit('device-status-changed', {
+                deviceId,
+                status,
+                timestamp: new Date().toISOString()
+            });
+        }
+    });
+
+    // Handle typing indicators for real-time features
+    socket.on('typing-start', (data) => {
+        const { userId, deviceId, context } = data;
+        socket.to(userId).emit('user-typing', {
+            deviceId,
+            context,
+            timestamp: new Date().toISOString()
+        });
+    });
+
+    socket.on('typing-stop', (data) => {
+        const { userId, deviceId, context } = data;
+        socket.to(userId).emit('user-stopped-typing', {
+            deviceId,
+            context
+        });
+    });
+
+    // Handle offline queue sync
+    socket.on('sync-offline-queue', (data) => {
+        const { userId, queuedActions } = data;
+        
+        // Process queued actions
+        queuedActions.forEach(action => {
+            switch (action.type) {
+                case 'complaint':
+                    // Process queued complaint
+                    const complaintId = uuidv4();
+                    const complaint = {
+                        id: complaintId,
+                        ...action.data,
+                        createdAt: action.timestamp,
+                        updatedAt: new Date().toISOString()
+                    };
+                    db.complaints.set(complaintId, complaint);
+                    
+                    // Sync to other devices
+                    socket.to(userId).emit('complaint-synced', {
+                        complaint,
+                        action: 'created',
+                        timestamp: new Date().toISOString()
+                    });
+                    break;
+                    
+                case 'preferences':
+                    // Process queued preferences
+                    const userKey = action.userType === 'admin' ? 'admins' : 'users';
+                    const user = db[userKey].get(userId);
+                    if (user) {
+                        user.preferences = { ...user.preferences, ...action.data };
+                    }
+                    
+                    // Sync to other devices
+                    socket.to(userId).emit('preferences-synced', {
+                        preferences: action.data,
+                        sourceDevice: action.deviceId,
+                        timestamp: new Date().toISOString()
+                    });
+                    break;
+            }
+        });
+        
+        // Confirm sync completion
+        socket.emit('offline-queue-synced', {
+            processedCount: queuedActions.length,
+            timestamp: new Date().toISOString()
+        });
+    });
+
+    // Handle disconnect
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
+        
+        // Find and update device status
+        for (const [deviceId, device] of db.devices) {
+            if (device.socketId === socket.id) {
+                device.lastActive = new Date().toISOString();
+                delete device.socketId;
+                
+                // Notify other devices of disconnection
+                socket.to(device.userId).emit('device-disconnected', {
+                    deviceId,
+                    timestamp: new Date().toISOString()
+                });
+                break;
+            }
+        }
     });
 });
 
