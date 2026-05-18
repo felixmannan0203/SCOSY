@@ -2,7 +2,7 @@
   "name": "scosy-complaint-system",
   "version": "1.0.0",
   "description": "Student Complaint System - Full Stack Web Application",
-  "main": "server.js",
+  "main": "index.html",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
