@@ -477,7 +477,7 @@
         if (sessionTimer) clearInterval(sessionTimer);
         try { await Auth.logout(); } catch (_) {}
         toast('Logged out securely.', 'info');
-        setTimeout(() => { window.location.href = '../pages/login.html'; }, 800);
+        setTimeout(() => { window.location.href = '/pages/login.html'; }, 800);
     }
 
     // ---- Mobile menu ----
@@ -511,7 +511,7 @@
 
         const session = await Auth.getSession();
         if (!session) {
-            window.location.href = '../pages/login.html';
+            window.location.href = '/pages/login.html';
             return;
         }
 
@@ -520,13 +520,13 @@
         try {
             currentProfile = await Auth.getProfile(currentUser.id);
         } catch (err) {
-            window.location.href = '../pages/login.html';
+            window.location.href = '/pages/login.html';
             return;
         }
 
         if (currentProfile.user_type !== 'admin' || currentProfile.approval_status !== 'approved') {
             await Auth.logout();
-            window.location.href = '../pages/login.html';
+            window.location.href = '/pages/login.html';
             return;
         }
 

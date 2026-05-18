@@ -413,7 +413,7 @@
         if (sessionTimer) clearInterval(sessionTimer);
         try { await Auth.logout(); } catch (_) {}
         toast('Logged out securely.', 'info');
-        setTimeout(() => { window.location.href = '../pages/login.html'; }, 800);
+        setTimeout(() => { window.location.href = '/pages/login.html'; }, 800);
     }
 
     // ---- Mobile menu ----
@@ -432,7 +432,7 @@
     window.toggleMobileMenu   = toggleMobileMenu;
     window.showProfile        = () => toast('Profile feature coming soon!', 'info');
     window.showSettings       = () => toast('Settings feature coming soon!', 'info');
-    window.showAnonymousForm  = () => { window.location.href = '../pages/login.html#anonymous'; };
+    window.showAnonymousForm  = () => { window.location.href = '/pages/login.html#anonymous'; };
     window.currentUser        = null;
 
     // ---- Init ----
@@ -441,7 +441,7 @@
 
         const session = await Auth.getSession();
         if (!session) {
-            window.location.href = '../pages/login.html';
+            window.location.href = '/pages/login.html';
             return;
         }
 
@@ -452,12 +452,12 @@
             currentProfile = await Auth.getProfile(currentUser.id);
         } catch (err) {
             console.error('Profile load error:', err);
-            window.location.href = '../pages/login.html';
+            window.location.href = '/pages/login.html';
             return;
         }
 
         if (currentProfile.user_type !== 'student') {
-            window.location.href = '../pages/login.html';
+            window.location.href = '/pages/login.html';
             return;
         }
 
