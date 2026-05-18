@@ -657,8 +657,7 @@ function toggleMobileMenu() {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { ResponsiveLayoutManager, TouchController };
 }
-// 
-==================== ENHANCED TOUCH GESTURES ====================
+//==================== ENHANCED TOUCH GESTURES ====================
 class EnhancedTouchController extends TouchController {
     constructor() {
         super();

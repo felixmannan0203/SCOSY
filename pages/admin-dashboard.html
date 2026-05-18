@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SCOSY | Admin Dashboard</title>
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body>
+    <div id="toastContainer" class="toast-container"></div>
+
+    <div class="dashboard" id="adminDashboard">
+        <!-- Navigation -->
+        <nav class="top-nav">
+            <div class="nav-brand">
+                <button class="mobile-menu-toggle" id="mobileMenuToggle" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="logo-icon"><i class="fas fa-shield-halved"></i></div>
+                <div class="brand-text">
+                    <h3>SCOSY Admin</h3>
+                    <span>Administrative Portal</span>
+                </div>
+            </div>
+            <div class="nav-actions">
+                <div class="admin-level-badge">
+                    <i class="fas fa-crown"></i>
+                    <span id="adminLevel">Level 1 Admin</span>
+                </div>
+                <div class="session-timer" id="sessionTimer">29:59</div>
+                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Switch theme">
+                    <i class="fas fa-sun" id="sunIcon"></i>
+                    <i class="fas fa-moon" id="moonIcon"></i>
+                </button>
+                <div class="user-menu">
+                    <div class="user-avatar" onclick="toggleUserDropdown()">
+                        <span id="userInitials">A</span>
+                    </div>
+                    <div class="dropdown-menu" id="userDropdown">
+                        <div class="dropdown-header">
+                            <div class="dropdown-avatar" id="dropdownAvatar">A</div>
+                            <div class="dropdown-user-info">
+                                <span class="dropdown-name" id="dropdownName">Administrator</span>
+                                <span class="dropdown-role" id="dropdownRole">Level 1 Administrator</span>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" onclick="showProfile()"><i class="fas fa-user"></i> Profile</a>
+                        <a href="#" onclick="showSettings()"><i class="fas fa-cog"></i> Settings</a>
+                        <div class="dropdown-divider"></div>
+                        <button class="logout-btn" onclick="logout()">
+                            <i class="fas fa-right-from-bracket"></i> Secure Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="dashboard-layout">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="menu-section">
+                    <div class="menu-title">Dashboard</div>
+                    <ul class="menu-list">
+                        <li><a href="#" class="active" onclick="showSection('overview', this)">
+                            <i class="fas fa-chart-line"></i> Overview
+                        </a></li>
+                    </ul>
+                </div>
+                <div class="menu-section">
+                    <div class="menu-title">Complaints</div>
+                    <ul class="menu-list">
+                        <li><a href="#" onclick="showSection('complaints', this)">
+                            <i class="fas fa-exclamation-triangle"></i> All Complaints
+                            <span class="menu-badge" id="totalComplaintsBadge">0</span>
+                        </a></li>
+                        <li><a href="#" onclick="showSection('pending', this)">
+                            <i class="fas fa-clock"></i> Pending Review
+                            <span class="menu-badge" id="pendingComplaintsBadge">0</span>
+                        </a></li>
+                        <li><a href="#" onclick="showSection('anonymous', this)">
+                            <i class="fas fa-user-secret"></i> Anonymous Reports
+                            <span class="menu-badge" id="anonymousComplaintsBadge">0</span>
+                        </a></li>
+                    </ul>
+                </div>
+                <div class="menu-section" id="adminSection">
+                    <div class="menu-title">Administration</div>
+                    <ul class="menu-list">
+                        <li><a href="#" onclick="showSection('pending-requests', this)">
+                            <i class="fas fa-user-clock"></i> Pending Requests
+                            <span class="menu-badge" id="pendingRequestsBadge">0</span>
+                        </a></li>
+                        <li><a href="#" onclick="showSection('users', this)">
+                            <i class="fas fa-users"></i> User Management
+                        </a></li>
+                        <li><a href="#" onclick="showSection('admins', this)">
+                            <i class="fas fa-user-shield"></i> Admin Management
+                        </a></li>
+                        <li><a href="#" onclick="showSection('reports', this)">
+                            <i class="fas fa-chart-bar"></i> Reports &amp; Analytics
+                        </a></li>
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="content-area">
+                <!-- Overview -->
+                <div class="content-section active" id="overview-section">
+                    <div class="welcome-banner">
+                        <div class="welcome-text">
+                            <h2>Welcome back, <span id="welcomeName">Administrator</span>!</h2>
+                            <p><strong>Level <span id="welcomeLevel">1</span> Administrator</strong> | SCOSY Admin Portal</p>
+                        </div>
+                        <div class="welcome-avatar" id="welcomeAvatar">A</div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card stat-card-clickable" id="adminStatCardTotal" role="button" aria-label="Total Complaints – click to view all complaints" tabindex="0">
+                            <div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div>
+                            <div class="stat-info"><h4>Total Complaints</h4><p id="totalComplaints">0</p></div>
+                        </div>
+                        <div class="stat-card stat-card-clickable" id="adminStatCardPending" role="button" aria-label="Pending Review – click to view pending complaints" tabindex="0">
+                            <div class="stat-icon amber"><i class="fas fa-clock"></i></div>
+                            <div class="stat-info"><h4>Pending Review</h4><p id="pendingComplaints">0</p></div>
+                        </div>
+                        <div class="stat-card stat-card-clickable" id="adminStatCardUsers" role="button" aria-label="Registered Users – click to view user management" tabindex="0">
+                            <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+                            <div class="stat-info"><h4>Registered Users</h4><p id="totalUsers">0</p></div>
+                        </div>
+                        <div class="stat-card stat-card-clickable" id="adminStatCardResolved" role="button" aria-label="Resolved Today – click to view resolved complaints" tabindex="0">
+                            <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                            <div class="stat-info"><h4>Resolved Today</h4><p id="resolvedToday">0</p></div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="panel">
+                            <div class="panel-header"><h3><i class="fas fa-bolt"></i> Quick Actions</h3></div>
+                            <div class="quick-actions">
+                                <button class="action-btn" onclick="showSection('pending')">
+                                    <i class="fas fa-clock"></i> Review Pending Complaints
+                                </button>
+                                <button class="action-btn" onclick="showSection('users')">
+                                    <i class="fas fa-users"></i> Manage Users
+                                </button>
+                                <button class="action-btn" onclick="showSection('reports')">
+                                    <i class="fas fa-chart-bar"></i> View Reports
+                                </button>
+                            </div>
+                        </div>
+                        <div class="panel">
+                            <div class="panel-header"><h3><i class="fas fa-clock"></i> Recent Activity</h3></div>
+                            <div class="activity-list" id="recentActivity">
+                                <div class="empty-state">No recent activity</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- All Complaints -->
+                <div class="content-section" id="complaints-section">
+                    <div class="page-header">
+                        <h1><i class="fas fa-exclamation-triangle"></i> All Complaints</h1>
+                        <div class="header-actions">
+                            <select id="complaintFilter" onchange="filterComplaints()">
+                                <option value="all">All Complaints</option>
+                                <option value="pending">Pending</option>
+                                <option value="in-progress">In Progress</option>
+                                <option value="resolved">Resolved</option>
+                                <option value="closed">Closed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header"><h3><i class="fas fa-list"></i> Complaint Management</h3></div>
+                        <div class="complaint-list" id="allComplaintsList">
+                            <div class="empty-state">No complaints found</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending -->
+                <div class="content-section" id="pending-section">
+                    <div class="page-header"><h1><i class="fas fa-clock"></i> Pending Review</h1></div>
+                    <div class="panel">
+                        <div class="panel-header"><h3><i class="fas fa-hourglass-half"></i> Complaints Awaiting Response</h3></div>
+                        <div class="complaint-list" id="pendingComplaintsList">
+                            <div class="empty-state">No pending complaints</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Anonymous Reports -->
+                <div class="content-section" id="anonymous-section">
+                    <div class="page-header"><h1><i class="fas fa-user-secret"></i> Anonymous Reports</h1></div>
+                    <div class="panel">
+                        <div class="panel-header"><h3><i class="fas fa-mask"></i> Anonymous Complaints</h3></div>
+                        <div class="complaint-list" id="anonymousComplaintsList">
+                            <div class="empty-state">No anonymous reports</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending Admin Requests -->
+                <div class="content-section" id="pending-requests-section">
+                    <div class="page-header">
+                        <h1><i class="fas fa-user-clock"></i> Pending Admin Requests</h1>
+                        <p>Review and approve admin access requests from staff members</p>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header"><h3><i class="fas fa-hourglass-half"></i> Admin Access Requests</h3></div>
+                        <div class="pending-requests-list" id="pendingRequestsList">
+                            <div class="empty-state">No pending admin requests</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Management -->
+                <div class="content-section" id="users-section">
+                    <div class="page-header"><h1><i class="fas fa-users"></i> User Management</h1></div>
+                    <div class="panel">
+                        <div class="panel-header"><h3><i class="fas fa-user-graduate"></i> Registered Students</h3></div>
+                        <div class="user-list" id="usersList">
+                            <div class="empty-state">No users found</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Management -->
+                <div class="content-section" id="admins-section">
+                    <div class="page-header"><h1><i class="fas fa-user-shield"></i> Admin Management</h1></div>
+                    <div class="panel">
+                        <div class="panel-header"><h3><i class="fas fa-crown"></i> Administrator Accounts</h3></div>
+                        <div class="admin-list" id="adminsList">
+                            <div class="empty-state">Loading administrators...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports -->
+                <div class="content-section" id="reports-section">
+                    <div class="page-header"><h1><i class="fas fa-chart-bar"></i> Reports &amp; Analytics</h1></div>
+                    <div class="dashboard-grid">
+                        <div class="panel">
+                            <div class="panel-header"><h3><i class="fas fa-chart-line"></i> Complaint Trends</h3></div>
+                            <div class="chart-container" id="complaintTrends">
+                                <div class="empty-state">No data available</div>
+                            </div>
+                        </div>
+                        <div class="panel">
+                            <div class="panel-header"><h3><i class="fas fa-pie-chart"></i> Category Breakdown</h3></div>
+                            <div class="chart-container" id="categoryBreakdown">
+                                <div class="empty-state">No data available</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Response Modal -->
+    <div class="modal" id="responseModal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-reply"></i> Respond to Complaint</h3>
+                <button class="modal-close" onclick="closeModal('responseModal')" aria-label="Close modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="complaint-details" id="complaintDetails"></div>
+                <div id="complaintChatThread" class="chat-thread" style="margin-bottom:16px;">
+                    <div class="empty-state">No messages yet</div>
+                </div>
+                <div class="chat-composer">
+                    <textarea id="adminResponseText" rows="3" placeholder="Type your response…" aria-label="Admin response"></textarea>
+                    <div class="chat-composer-actions">
+                        <button class="btn-send" id="btnSendResponse">
+                            <i class="fas fa-paper-plane"></i> Send Response
+                        </button>
+                        <button class="btn-broadcast" id="btnSendToEveryone">
+                            <i class="fas fa-bullhorn"></i> Send to Everyone
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/admin.js"></script>
+</body>
+</html>

@@ -404,6 +404,8 @@ const App = (function() {
     // ==================== LOGIN ====================
     async function handleLogin(e) {
         e.preventDefault();
+        console.log('🔐 Login attempt started...');
+        
         if (lockoutSeconds > 0) {
             toast(`Account locked. Try again in ${Math.ceil(lockoutSeconds / 60)} minutes.`, 'error');
             return;
@@ -412,6 +414,9 @@ const App = (function() {
         const identifier = $('#loginEmail').value.trim();
         const password = $('#loginPassword').value;
         const remember = $('#rememberMe').checked;
+
+        console.log('📧 Login identifier:', identifier);
+        console.log('🔑 Password length:', password.length);
 
         if (!identifier || !password) {
             toast('Please enter both matric/email and password.', 'error');
@@ -425,22 +430,29 @@ const App = (function() {
 
         try {
             // Check if it's admin login first
+            console.log('🔍 Checking admin login...');
             if (identifier === 'admin' || identifier.includes('@plasu.edu.ng')) {
                 const admins = load('scosy_admins', {});
+                console.log('👥 Loaded admins:', Object.keys(admins));
                 let admin = null;
                 
                 // Find admin by staff ID or email
                 for (const staffId in admins) {
                     const a = admins[staffId];
+                    console.log('🔍 Checking admin:', a.staffId, a.email);
                     if (a.staffId === identifier || a.email === identifier) {
                         admin = a;
+                        console.log('✅ Found matching admin:', admin.staffId);
                         break;
                     }
                 }
                 
                 if (admin) {
+                    console.log('🔐 Verifying admin password...');
                     // Verify admin password
                     const isValid = await verifyPassword(password, admin.passwordHash, admin.passwordSalt);
+                    console.log('🔐 Password valid:', isValid);
+                    
                     if (isValid) {
                         if (admin.approvalStatus === 'pending') {
                             toast('Your admin account is pending approval. Please wait for Level 1 admin approval.', 'warning');
@@ -462,9 +474,14 @@ const App = (function() {
                         
                         logSecurity('ADMIN_LOGIN_SUCCESS', `Admin login: ${admin.staffId}`);
                         toast(`Welcome back, ${admin.name}!`, 'success');
+                        console.log('🎉 Admin login successful, entering dashboard...');
                         enterAdminDashboard();
                         return;
+                    } else {
+                        console.log('❌ Admin password verification failed');
                     }
+                } else {
+                    console.log('❌ No matching admin found');
                 }
             }
             
@@ -1246,7 +1263,10 @@ const App = (function() {
         hide($('#dashboard'));
         show($('#loginPage'));
         toast('Logged out securely.', 'info');
-    }) {
+    }
+
+    // ==================== FILE UPLOAD ====================
+    function handleAvatarUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
 
@@ -1801,6 +1821,33 @@ Could you rephrase or select a quick reply below?`;
         
         // Initialize admin system
         initializeAdminSystem();
+        
+        // Force create admin account for testing
+        const admins = load('scosy_admins', {});
+        if (!admins['admin']) {
+            console.log('Creating default admin account...');
+            const defaultAdmin = {
+                staffId: 'admin',
+                name: 'System Administrator',
+                email: 'admin@plasu.edu.ng',
+                adminLevel: 1,
+                approvalStatus: 'approved',
+                isPrimary: true,
+                createdAt: new Date().toISOString(),
+                lastLogin: null,
+                passwordHash: null,
+                passwordSalt: null
+            };
+            
+            // Set simple password for testing
+            hashPassword('123456789').then(hashed => {
+                defaultAdmin.passwordHash = hashed.hash;
+                defaultAdmin.passwordSalt = hashed.salt;
+                admins['admin'] = defaultAdmin;
+                save('scosy_admins', admins);
+                console.log('✅ Default admin account created: admin / 123456789');
+            });
+        }
         
         // Check for existing user session
         const rememberedUser = load('scosy_remember', null);

@@ -1,0 +1,391 @@
+/* ============================================================
+   SCOSY AI — Dedicated Stylesheet
+   Covers: FAB button, sidebar badge, full-page chat section
+   ============================================================ */
+
+/* ---- Floating shortcut button (Meta-style) ---- */
+.sai-fab {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    z-index: 500;
+    box-shadow: 0 4px 18px rgba(79, 70, 229, 0.45);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    animation: saiFabPulse 3s ease-in-out infinite;
+    overflow: visible;
+}
+
+@keyframes saiFabPulse {
+    0%, 100% { box-shadow: 0 4px 18px rgba(79,70,229,0.45), 0 0 0 0 rgba(79,70,229,0.2); }
+    50%       { box-shadow: 0 4px 18px rgba(79,70,229,0.45), 0 0 0 10px rgba(79,70,229,0); }
+}
+
+.sai-fab:hover {
+    transform: scale(1.1) translateY(-2px);
+    box-shadow: 0 8px 26px rgba(79, 70, 229, 0.6);
+    animation: none;
+}
+
+.sai-fab:active { transform: scale(0.93); }
+
+.sai-fab-ring {
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid rgba(124, 58, 237, 0.35);
+    pointer-events: none;
+}
+
+/* ---- Sidebar badge ---- */
+.scosy-ai-sidebar-badge {
+    margin-left: auto;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: #fff;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* ---- Full-page AI section wrapper ---- */
+.sai-page {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 70px - 64px);
+    max-height: 780px;
+    min-height: 500px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+/* ---- Top bar ---- */
+.sai-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 22px;
+    background: linear-gradient(135deg, #4338ca 0%, #6d28d9 60%, #5b21b6 100%);
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.sai-topbar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 75% 30%, rgba(255,255,255,0.1) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.sai-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    z-index: 1;
+}
+
+.sai-topbar-avatar {
+    position: relative;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.sai-topbar-dot {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 11px;
+    height: 11px;
+    background: #4ade80;
+    border-radius: 50%;
+    border: 2px solid #5b21b6;
+    box-shadow: 0 0 6px rgba(74,222,128,0.7);
+    animation: saiOnline 2.5s ease-in-out infinite;
+}
+
+@keyframes saiOnline {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.45; }
+}
+
+.sai-topbar-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sai-topbar-name {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: #fff;
+    letter-spacing: 0.2px;
+}
+
+.sai-topbar-status {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.8);
+}
+
+.sai-topbar-right {
+    position: relative;
+    z-index: 1;
+}
+
+.sai-beta-tag {
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    text-transform: uppercase;
+}
+
+/* ---- Messages thread ---- */
+.sai-thread {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: var(--bg);
+    scroll-behavior: smooth;
+}
+
+.sai-thread::-webkit-scrollbar { width: 5px; }
+.sai-thread::-webkit-scrollbar-track { background: transparent; }
+.sai-thread::-webkit-scrollbar-thumb {
+    background: rgba(124, 58, 237, 0.2);
+    border-radius: 4px;
+}
+.sai-thread::-webkit-scrollbar-thumb:hover {
+    background: rgba(124, 58, 237, 0.4);
+}
+
+/* ---- Message rows ---- */
+.sai-row {
+    display: flex;
+    gap: 10px;
+    animation: saiMsgIn 0.2s ease;
+}
+
+@keyframes saiMsgIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.sai-row--ai   { align-items: flex-end; }
+.sai-row--user { flex-direction: row-reverse; }
+
+/* AI avatar */
+.sai-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(79,70,229,0.3);
+}
+
+/* Body (bubble + time) */
+.sai-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 72%;
+}
+
+.sai-row--user .sai-body { align-items: flex-end; }
+
+/* Bubbles */
+.sai-bubble {
+    padding: 12px 16px;
+    border-radius: 18px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    word-break: break-word;
+}
+
+.sai-bubble--ai {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+}
+
+.sai-bubble--user {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 3px 12px rgba(79,70,229,0.28);
+}
+
+/* Timestamps */
+.sai-time {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    padding: 0 4px;
+}
+
+.sai-time--right { text-align: right; }
+
+/* Connect to admin button */
+.sai-connect-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 9px 18px;
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 3px 12px rgba(79,70,229,0.35);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.sai-connect-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(79,70,229,0.45);
+}
+
+.sai-connect-btn:active { transform: translateY(0); }
+
+/* Typing indicator */
+.sai-typing {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 14px 18px;
+    min-width: 60px;
+}
+
+.sai-dot {
+    width: 7px;
+    height: 7px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    animation: saiBounce 1.3s ease-in-out infinite;
+}
+
+.sai-dot:nth-child(2) { animation-delay: 0.18s; }
+.sai-dot:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes saiBounce {
+    0%, 60%, 100% { transform: translateY(0);   opacity: 0.3; }
+    30%            { transform: translateY(-6px); opacity: 1; }
+}
+
+/* ---- Composer ---- */
+.sai-composer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+}
+
+.sai-input {
+    flex: 1;
+    padding: 11px 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 24px;
+    background: var(--bg-light);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s;
+    min-width: 0;
+}
+
+.sai-input::placeholder { color: var(--text-muted); }
+
+.sai-input:focus {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
+}
+
+.sai-send-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    box-shadow: 0 3px 12px rgba(79,70,229,0.35);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.sai-send-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 5px 18px rgba(79,70,229,0.5);
+}
+
+.sai-send-btn:active { transform: scale(0.9); }
+
+/* ---- Mobile ---- */
+@media (max-width: 767px) {
+    .sai-page {
+        height: calc(100vh - 70px - 32px);
+        max-height: none;
+        border-radius: 12px;
+    }
+
+    .sai-fab {
+        right: 16px;
+        bottom: 16px;
+        width: 50px;
+        height: 50px;
+        font-size: 1.1rem;
+    }
+}

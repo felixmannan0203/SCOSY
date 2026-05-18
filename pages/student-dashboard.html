@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCOSY | Student Dashboard</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/scosy-ai.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div id="toastContainer" class="toast-container"></div>
+
+    <div class="dashboard" id="studentDashboard">
+        <!-- Navigation -->
+        <nav class="top-nav">
+            <div class="nav-brand">
+                <button class="mobile-menu-toggle" id="mobileMenuToggle" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="logo-icon"><i class="fas fa-shield-halved"></i></div>
+                <div class="brand-text">
+                    <h3>SCOSY Portal</h3>
+                    <span>Student Dashboard</span>
+                </div>
+            </div>
+            <div class="nav-actions">
+                <div class="security-badge"><i class="fas fa-lock"></i> SECURE</div>
+                <div class="session-timer" id="sessionTimer">29:59</div>
+                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Switch theme">
+                    <i class="fas fa-sun" id="sunIcon"></i>
+                    <i class="fas fa-moon" id="moonIcon"></i>
+                </button>
+                <div class="user-menu">
+                    <div class="user-avatar" onclick="toggleUserDropdown()">
+                        <span id="userInitials">S</span>
+                    </div>
+                    <div class="dropdown-menu" id="userDropdown">
+                        <div class="dropdown-header">
+                            <div class="dropdown-avatar" id="dropdownAvatar">S</div>
+                            <div class="dropdown-user-info">
+                                <span class="dropdown-name" id="dropdownName">Student Name</span>
+                                <span class="dropdown-matric" id="dropdownMatric">PLASU/2024/001</span>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" onclick="showProfile()"><i class="fas fa-user"></i> Profile</a>
+                        <a href="#" onclick="showSettings()"><i class="fas fa-cog"></i> Settings</a>
+                        <div class="dropdown-divider"></div>
+                        <button class="logout-btn" onclick="logout()">
+                            <i class="fas fa-right-from-bracket"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="dashboard-layout">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="menu-section">
+                    <div class="menu-title">Main Menu</div>
+                    <ul class="menu-list">
+                        <li><a href="#" class="active" onclick="showSection('overview', this)">
+                            <i class="fas fa-chart-pie"></i> Dashboard
+                        </a></li>
+                        <li><a href="#" onclick="showSection('complaints', this)">
+                            <i class="fas fa-circle-exclamation"></i> My Complaints
+                            <span class="menu-badge" id="complaintBadge">0</span>
+                        </a></li>
+                        <li><a href="#" onclick="showSection('new-complaint', this)">
+                            <i class="fas fa-plus-circle"></i> New Complaint
+                        </a></li>
+                        <li><a href="#" onclick="showSection('chat', this)">
+                            <i class="fas fa-comments"></i> Messages
+                            <span class="menu-badge" id="messageBadge">0</span>
+                        </a></li>
+                        <li>
+                            <a href="#" onclick="showSection('scosy-ai', this); return false;" id="scosyAiSidebarLink" aria-label="Open SCOSY AI Assistant">
+                                <i class="fas fa-robot"></i> SCOSY AI
+                                <span class="scosy-ai-sidebar-badge">AI</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="menu-section">
+                    <div class="menu-title">Academic</div>
+                    <ul class="menu-list">
+                        <li><a href="#" onclick="showSection('courses', this)">
+                            <i class="fas fa-book"></i> Courses &amp; Materials
+                        </a></li>
+                        <li><a href="#" onclick="showSection('staff', this)">
+                            <i class="fas fa-chalkboard-user"></i> Staff Directory
+                        </a></li>
+                        <li><a href="#" onclick="showSection('calendar', this)">
+                            <i class="fas fa-calendar"></i> Academic Calendar
+                        </a></li>
+                    </ul>
+                </div>
+                <div class="menu-section">
+                    <div class="menu-title">System</div>
+                    <ul class="menu-list">
+                        <li><a href="#" onclick="showSection('backup', this)">
+                            <i class="fas fa-database"></i> Backup &amp; Restore
+                        </a></li>
+                        <li><a href="#" onclick="showSection('security', this)">
+                            <i class="fas fa-shield-halved"></i> Security Audit
+                        </a></li>
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="content-area">
+                <!-- Overview -->
+                <div class="content-section active" id="overview-section">
+                    <div class="welcome-banner">
+                        <div class="welcome-text">
+                            <h2>Welcome back, <span id="welcomeName">Student</span>!</h2>
+                            <p><strong>2025/2026 Academic Session</strong> | Computer Science Department</p>
+                        </div>
+                        <div class="welcome-avatar" id="welcomeAvatar">S</div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card stat-card-clickable" id="statCardTotal" role="button" aria-label="View all complaints" tabindex="0">
+                            <div class="stat-icon blue"><i class="fas fa-exclamation-triangle"></i></div>
+                            <div class="stat-info"><h4>Total Complaints</h4><p id="totalComplaints">0</p></div>
+                        </div>
+                        <div class="stat-card stat-card-clickable" id="statCardPending" role="button" aria-label="View pending complaints" tabindex="0">
+                            <div class="stat-icon amber"><i class="fas fa-clock"></i></div>
+                            <div class="stat-info"><h4>Pending</h4><p id="pendingComplaints">0</p></div>
+                        </div>
+                        <div class="stat-card stat-card-clickable" id="statCardResolved" role="button" aria-label="View resolved complaints" tabindex="0">
+                            <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                            <div class="stat-info"><h4>Resolved</h4><p id="resolvedComplaints">0</p></div>
+                        </div>
+                        <div class="stat-card stat-card-clickable" id="statCardMessages" role="button" aria-label="View messages" tabindex="0">
+                            <div class="stat-icon purple"><i class="fas fa-comments"></i></div>
+                            <div class="stat-info"><h4>Messages</h4><p id="totalMessages">0</p></div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="panel">
+                            <div class="panel-header"><h3><i class="fas fa-bolt"></i> Quick Actions</h3></div>
+                            <div class="quick-actions">
+                                <button class="action-btn" onclick="showSection('new-complaint')">
+                                    <i class="fas fa-plus-circle"></i> File New Complaint
+                                </button>
+                                <button class="action-btn" onclick="showAnonymousForm()">
+                                    <i class="fas fa-user-secret"></i> Anonymous Report
+                                </button>
+                                <button class="action-btn" onclick="showSection('chat')">
+                                    <i class="fas fa-comments"></i> View Messages
+                                </button>
+                            </div>
+                        </div>
+                        <div class="panel">
+                            <div class="panel-header"><h3><i class="fas fa-clock"></i> Recent Activity</h3></div>
+                            <div class="activity-list" id="recentActivity">
+                                <div class="empty-state">No recent activity</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My Complaints -->
+                <div class="content-section" id="complaints-section">
+                    <div class="page-header">
+                        <h1><i class="fas fa-circle-exclamation"></i> My Complaints</h1>
+                        <button class="btn btn-primary btn-sm" onclick="showSection('new-complaint')">
+                            <i class="fas fa-plus"></i> New Complaint
+                        </button>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header"><h3><i class="fas fa-list"></i> My Tickets</h3></div>
+                        <div class="ticket-list" id="studentTicketList">
+                            <p class="empty-state">No complaints filed yet</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- New Complaint -->
+                <div class="content-section" id="new-complaint-section">
+                    <div class="page-header">
+                        <h1><i class="fas fa-plus-circle"></i> File New Complaint</h1>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header"><h3><i class="fas fa-paper-plane"></i> Submit Complaint</h3></div>
+                        <form id="complaintForm">
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label>Category</label>
+                                    <select id="complaintCategory" required>
+                                        <option value="">Select Category</option>
+                                        <option value="academic">Academic Issues</option>
+                                        <option value="infrastructure">Infrastructure</option>
+                                        <option value="staff">Staff Conduct</option>
+                                        <option value="administrative">Administrative</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>Priority</label>
+                                    <select id="complaintPriority" required>
+                                        <option value="low">Low</option>
+                                        <option value="medium" selected>Medium</option>
+                                        <option value="high">High</option>
+                                        <option value="critical">Critical</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>Subject</label>
+                                <input type="text" id="complaintSubject" required maxlength="120" placeholder="Brief summary">
+                            </div>
+                            <div class="input-group">
+                                <label>Description</label>
+                                <textarea id="complaintMessage" rows="4" required maxlength="2000" placeholder="Detailed description..."></textarea>
+                            </div>
+                            <div class="input-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="isAnonymous"> Submit anonymously
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Submit Complaint
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div class="content-section" id="chat-section">
+                    <div class="page-header">
+                        <h1><i class="fas fa-comments"></i> Messages</h1>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header"><h3><i class="fas fa-inbox"></i> Message Center</h3></div>
+                        <div id="chatThread" class="chat-thread">
+                            <div class="empty-state">No messages yet</div>
+                        </div>
+                        <div class="chat-composer" id="chatComposer">
+                            <textarea id="studentReplyText" rows="2" placeholder="Type a reply…" aria-label="Reply message"></textarea>
+                            <div class="chat-composer-actions">
+                                <button class="btn-send" id="btnStudentSendReply" onclick="sendStudentReply()">
+                                    <i class="fas fa-paper-plane"></i> Send Reply
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SCOSY AI -->
+                <div class="content-section" id="scosy-ai-section">
+                    <div class="sai-page">
+                        <div class="sai-topbar">
+                            <div class="sai-topbar-left">
+                                <div class="sai-topbar-avatar">
+                                    <i class="fas fa-robot"></i>
+                                    <span class="sai-topbar-dot"></span>
+                                </div>
+                                <div class="sai-topbar-info">
+                                    <span class="sai-topbar-name">SCOSY AI</span>
+                                    <span class="sai-topbar-status">Online · Virtual Assistant</span>
+                                </div>
+                            </div>
+                            <div class="sai-topbar-right">
+                                <span class="sai-beta-tag">BETA</span>
+                            </div>
+                        </div>
+                        <div class="sai-thread" id="scosyAiMessages"></div>
+                        <div class="sai-composer">
+                            <input type="text" id="scosyAiInput" class="sai-input"
+                                placeholder="Ask SCOSY AI anything…" aria-label="Ask SCOSY AI"
+                                autocomplete="off" onkeydown="scosyAiKeydown(event)" />
+                            <button class="sai-send-btn" onclick="scosyAiSend()" aria-label="Send">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/student.js"></script>
+    <script src="../js/scosy-ai.js"></script>
+
+    <!-- SCOSY AI floating shortcut -->
+    <button class="sai-fab" id="scosyAiFab" onclick="showSection('scosy-ai')" aria-label="Open SCOSY AI" title="SCOSY AI">
+        <i class="fas fa-robot"></i>
+        <span class="sai-fab-ring"></span>
+    </button>
+</body>
+</html>
