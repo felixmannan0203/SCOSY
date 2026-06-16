@@ -9,11 +9,27 @@
 
 // ---- Config ----
 const SUPABASE_URL  = 'https://fsxylpuqsvggoqyyrpdz.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzeHlscHVxc3ZnZ29xeXlycGR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDA2NjQsImV4cCI6MjA5NDY3NjY2NH0.Zhi4J_kwURxnoT-rJNHu9k9k2tyFLm6WfKl_RdorgCg';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzeHlscHVxc3ZnZ29xeXlycGR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDA2NjQsImV4cCI6MjA5NDY3NjY2NH0.Zhi4J_kw[...]';
 
-// ---- Init ----
-const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+// ---- Init with error handling ----
+let db = null;
+
+if (typeof supabase === 'undefined') {
+    console.error('❌ CRITICAL: Supabase library not loaded. Check that @supabase/supabase-js is loaded before supabase-client.js');
+} else {
+    try {
+        const { createClient } = supabase;
+        db = createClient(SUPABASE_URL, SUPABASE_ANON);
+        console.log('✅ Supabase client initialized successfully');
+    } catch (err) {
+        console.error('❌ Failed to initialize Supabase client:', err);
+    }
+}
+
+// Fallback check
+if (!db) {
+    console.error('❌ CRITICAL: db object is null or undefined. Auth will fail.');
+}
 
 // ============================================================
 // AUTH
@@ -21,6 +37,7 @@ const db = createClient(SUPABASE_URL, SUPABASE_ANON);
 const Auth = {
     /** Sign up a new student */
     async registerStudent({ name, matric, email, level, password }) {
+        if (!db) throw new Error('Database not initialized');
         const { data, error } = await db.auth.signUp({
             email,
             password,
@@ -46,6 +63,7 @@ const Auth = {
 
     /** Sign up a new admin (pending approval) */
     async registerAdmin({ name, staffId, email, position, password }) {
+        if (!db) throw new Error('Database not initialized');
         const { data, error } = await db.auth.signUp({
             email,
             password,
@@ -72,6 +90,7 @@ const Auth = {
 
     /** Sign in with email + password */
     async login(email, password) {
+        if (!db) throw new Error('Database not initialized');
         const { data, error } = await db.auth.signInWithPassword({ email, password });
         if (error) throw error;
         return data;
@@ -79,18 +98,21 @@ const Auth = {
 
     /** Sign out */
     async logout() {
+        if (!db) throw new Error('Database not initialized');
         const { error } = await db.auth.signOut();
         if (error) throw error;
     },
 
     /** Get current session */
     async getSession() {
+        if (!db) throw new Error('Database not initialized');
         const { data } = await db.auth.getSession();
         return data.session;
     },
 
     /** Get current user profile — uses session token to bypass RLS timing issue */
     async getProfile(userId) {
+        if (!db) throw new Error('Database not initialized');
         const { data, error } = await db
             .from('profiles')
             .select('*')
@@ -112,6 +134,7 @@ const Auth = {
 
     /** Update last login timestamp */
     async updateLastLogin(userId) {
+        if (!db) throw new Error('Database not initialized');
         await db.from('profiles')
             .update({ last_login: new Date().toISOString() })
             .eq('id', userId);
@@ -119,6 +142,7 @@ const Auth = {
 
     /** Listen for auth state changes */
     onAuthChange(callback) {
+        if (!db) throw new Error('Database not initialized');
         return db.auth.onAuthStateChange(callback);
     }
 };
@@ -129,6 +153,7 @@ const Auth = {
 const Complaints = {
     /** Submit a new complaint */
     async submit({ studentId, studentName, studentMatric, category, priority, subject, message, isAnonymous }) {
+        if (!db) throw new Error('Database not initialized');
         const { data, error } = await db.from('complaints').insert({
             student_id: isAnonymous ? null : studentId,
             student_name: isAnonymous ? 'Anonymous' : studentName,
@@ -145,6 +170,7 @@ const Complaints = {
 
     /** Get complaints for a student */
     async getForStudent(studentId) {
+        if (!db) throw new Error('Database not initialized');
         const { data, error } = await db
             .from('complaints')
             .select('*')
@@ -156,6 +182,7 @@ const Complaints = {
 
     /** Get all complaints (admin) */
     async getAll() {
+        if (!db) throw new Error('Database not initialized');
         const { data, error } = await db
             .from('complaints')
             .select('*')
@@ -166,6 +193,7 @@ const Complaints = {
 
     /** Update complaint status */
     async updateStatus(complaintId, updates) {
+        if (!db) throw new Error('Database not initialized');
         const { data, error } = await db
             .from('complaints')
             .update(updates)
@@ -178,6 +206,7 @@ const Complaints = {
 
     /** Subscribe to complaint changes for a student */
     subscribeStudent(studentId, callback) {
+        if (!db) throw new Error('Database not initialized');
         return db
             .channel(`complaints:student:${studentId}`)
             .on('postgres_changes', {
@@ -191,6 +220,7 @@ const Complaints = {
 
     /** Subscribe to all complaint changes (admin) */
     subscribeAdmin(callback) {
+        if (!db) throw new Error('Database not initialized');
         return db
             .channel('complaints:admin')
             .on('postgres_changes', {
@@ -208,6 +238,7 @@ const Complaints = {
 const Messages = {
     /** Send a message */
     async send({ complaintId, senderId, senderName, senderType, targetStudentId, message, isBroadcast }) {
+        if (!db) throw new Error('Database not initialized');
         const { data, error } = await db.from('messages').insert({
             complaint_id: complaintId || null,
             sender_id: senderId,
@@ -224,6 +255,7 @@ const Messages = {
 
     /** Get messages for a student (their messages + broadcasts) */
     async getForStudent(studentId) {
+        if (!db) throw new Error('Database not initialized');
         const { data, error } = await db
             .from('messages')
             .select('*')
@@ -235,6 +267,7 @@ const Messages = {
 
     /** Get messages for a specific complaint */
     async getForComplaint(complaintId) {
+        if (!db) throw new Error('Database not initialized');
         const { data, error } = await db
             .from('messages')
             .select('*')
@@ -246,6 +279,7 @@ const Messages = {
 
     /** Mark messages as read */
     async markRead(messageIds, userId) {
+        if (!db) throw new Error('Database not initialized');
         for (const id of messageIds) {
             await db.rpc('array_append_unique', { row_id: id, user_id: userId })
                 .catch(() => {
@@ -259,6 +293,7 @@ const Messages = {
 
     /** Subscribe to new messages for a student */
     subscribeStudent(studentId, callback) {
+        if (!db) throw new Error('Database not initialized');
         return db
             .channel(`messages:student:${studentId}`)
             .on('postgres_changes', {
@@ -278,6 +313,7 @@ const Messages = {
 
     /** Subscribe to all messages (admin) */
     subscribeAdmin(callback) {
+        if (!db) throw new Error('Database not initialized');
         return db
             .channel('messages:admin')
             .on('postgres_changes', {
@@ -295,6 +331,7 @@ const Messages = {
 const Notifications = {
     /** Get unread notifications for a user */
     async getUnread(userId) {
+        if (!db) throw new Error('Database not initialized');
         const { data, error } = await db
             .from('notifications')
             .select('*')
@@ -307,6 +344,7 @@ const Notifications = {
 
     /** Mark notification as read */
     async markRead(notificationId) {
+        if (!db) throw new Error('Database not initialized');
         await db.from('notifications')
             .update({ is_read: true })
             .eq('id', notificationId);
@@ -314,6 +352,7 @@ const Notifications = {
 
     /** Mark all as read for a user */
     async markAllRead(userId) {
+        if (!db) throw new Error('Database not initialized');
         await db.from('notifications')
             .update({ is_read: true })
             .eq('user_id', userId);
@@ -321,6 +360,7 @@ const Notifications = {
 
     /** Subscribe to new notifications for a user */
     subscribe(userId, callback) {
+        if (!db) throw new Error('Database not initialized');
         return db
             .channel(`notifications:${userId}`)
             .on('postgres_changes', {
@@ -364,6 +404,7 @@ const PushNotify = {
 const AdminMgmt = {
     /** Get all admins */
     async getAll() {
+        if (!db) throw new Error('Database not initialized');
         const { data, error } = await db
             .from('profiles')
             .select('*')
@@ -375,6 +416,7 @@ const AdminMgmt = {
 
     /** Approve an admin */
     async approve(profileId) {
+        if (!db) throw new Error('Database not initialized');
         const { error } = await db
             .from('profiles')
             .update({ approval_status: 'approved' })
@@ -384,6 +426,7 @@ const AdminMgmt = {
 
     /** Get all students */
     async getStudents() {
+        if (!db) throw new Error('Database not initialized');
         const { data, error } = await db
             .from('profiles')
             .select('*')
